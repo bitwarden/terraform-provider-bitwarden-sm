@@ -35,6 +35,58 @@ Then commit the changes to `go.mod` and `go.sum`.
 
 ## Using the provider
 
+### Dynamic Secrets
+
+Dynamic Secrets are secrets that can be rotated or updated in the Bitwarden Secrets Manager.
+Under certain conditions, our provider supports them without manual updates to the `terraform` configuration.
+
+#### Conditions
+
+The `terraform` configuration **must not** contain an explicit secret value.
+If it contains an explicit value that value will always have precedence and will overwrite outside changes.
+
+#### Usage
+
+To demonstrate this feature, we will create a sample secret with the following configuration:
+
+```terraform
+resource "bitwarden-sm_secret" "secret" {
+    key        = "my-dynamic-secret"
+    project_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+}
+```
+
+The result could look like this:
+
+ ```bash
+$ terraform show
+
+# bitwarden-sm_secret.secret:
+resource "bitwarden-sm_secret" "secret" {
+    creation_date   = "2024-07-01T00:00:00.000000000Z"
+    id              = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+    key             = "dynamic-test-secret"
+    note            = ""
+    organization_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+    project_id      = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+    revision_date   = "2024-07-01T00:00:00.000000000Z"
+    value           = (sensitive value)
+}
+```
+
+Let's assume the secret value got updated outside `terraform`, e.g. in Bitwarden Secrets Manager.
+If one would execute `terraform apply` again, the plan would be empty:
+
+```bash
+No changes. Your infrastructure matches the configuration.
+
+Terraform has compared your real infrastructure against your configuration and found no differences, so no changes are needed.
+
+Apply complete! Resources: 0 added, 0 changed, 0 destroyed.
+```
+
+But, `terraform show` would display a new `revision_date`.
+
 ### Importing an existing Secret into Terraform State
 
 To import a secret into the `terraform` state and configuration, the following steps are necessary:

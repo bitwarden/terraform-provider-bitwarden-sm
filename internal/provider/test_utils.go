@@ -156,7 +156,17 @@ func buildProviderConfigFromEnvFile(t *testing.T, filePath ...string) string {
 }
 
 func buildSecretResourceConfig(key, value, note, projectId string) string {
-	return fmt.Sprintf(`
+	if value == "" {
+		return fmt.Sprintf(`
+
+        resource "bitwarden-sm_secret" "test" {
+            key = "%s"
+            note = "%s"
+            project_id = "%s"
+        }
+        `, key, note, projectId)
+	} else {
+		return fmt.Sprintf(`
 
         resource "bitwarden-sm_secret" "test" {
             key = "%s"
@@ -165,4 +175,5 @@ func buildSecretResourceConfig(key, value, note, projectId string) string {
             project_id = "%s"
         }
         `, key, value, note, projectId)
+	}
 }
