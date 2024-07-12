@@ -212,6 +212,7 @@ func (p *BitwardenSecrestsManagerProvider) Resources(_ context.Context) []func()
 func (p *BitwardenSecrestsManagerProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		NewProjectsDataSource,
+		NewSecretsDataSource,
 	}
 }
 
