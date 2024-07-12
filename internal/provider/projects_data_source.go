@@ -10,23 +10,24 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-// Ensure provider defined types fully satisfy framework interfaces.
-var _ datasource.DataSource = &ProjectsDataSource{}
-var _ datasource.DataSourceWithConfigure = &ProjectsDataSource{}
+var (
+	// Ensure provider defined types fully satisfy framework interfaces.
+	_ datasource.DataSource              = &projectsDataSource{}
+	_ datasource.DataSourceWithConfigure = &projectsDataSource{}
+)
 
 func NewProjectsDataSource() datasource.DataSource {
-	return &ProjectsDataSource{}
+	return &projectsDataSource{}
 }
 
-// ProjectsDataSource defines the data source implementation.
-type ProjectsDataSource struct {
-	client *sdk.BitwardenClientInterface
+// projectsDataSource defines the data source implementation.
+type projectsDataSource struct {
+	bitwardenClient *sdk.BitwardenClientInterface
 }
 
-// ProjectsDataSourceModel describes the data source data model.
-type ProjectsDataSourceModel struct {
+// projectsDataSourceModel describes the data source data model.
+type projectsDataSourceModel struct {
 	Projects []projectDataSourceModel `tfsdk:"projects"`
-	ID       types.String             `tfsdk:"id"`
 }
 
 type projectDataSourceModel struct {
@@ -37,18 +38,14 @@ type projectDataSourceModel struct {
 	RevisionDate   types.String `tfsdk:"revision_date"`
 }
 
-func (d *ProjectsDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *projectsDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_projects"
 }
 
-func (d *ProjectsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *projectsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "Fetches a list of projects accessible by the machine account.",
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Description: "Placeholder identifier attribute.",
-				Computed:    true,
-			},
 			"projects": schema.ListNestedAttribute{
 				Description: "List of projects accessible by the machine account.",
 				Computed:    true,
@@ -81,7 +78,7 @@ func (d *ProjectsDataSource) Schema(_ context.Context, _ datasource.SchemaReques
 	}
 }
 
-func (d *ProjectsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *projectsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	// Add a nil check when handling ProviderData because Terraform
 	// sets that data after it calls the ConfigureProvider RPC.
 	tflog.Info(ctx, "Configuring Datasource")
@@ -103,32 +100,31 @@ func (d *ProjectsDataSource) Configure(ctx context.Context, req datasource.Confi
 	if client == nil {
 		resp.Diagnostics.AddError(
 			"Client Not Initialized",
-			"The Bitwarden client was not properly initialized.",
+			"The Bitwarden bitwardenClient was not properly initialized.",
 		)
 		return
 	}
 
-	d.client = client
+	d.bitwardenClient = client
 
 	tflog.Info(ctx, "Datasource Configured")
-
 }
 
-func (d *ProjectsDataSource) Read(ctx context.Context, _ datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var state ProjectsDataSourceModel
+func (d *projectsDataSource) Read(ctx context.Context, _ datasource.ReadRequest, resp *datasource.ReadResponse) {
+	tflog.Info(ctx, "Reading Projects Datasource")
 
-	tflog.Info(ctx, "Reading Datasource")
+	var state projectsDataSourceModel
 
-	if d.client == nil {
+	if d.bitwardenClient == nil {
 		resp.Diagnostics.AddError(
 			"Client Not Initialized",
-			"The Bitwarden client was not properly initialized.",
+			"The Bitwarden bitwardenClient was not properly initialized.",
 		)
 		return
 	}
 
-	client := *d.client
-	projects, err := client.Projects().List("secret")
+	client := *d.bitwardenClient
+	projects, err := client.Projects().List("c9a7982f-8103-48a0-be4c-b1a900b32545")
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to List Projects",
@@ -148,8 +144,6 @@ func (d *ProjectsDataSource) Read(ctx context.Context, _ datasource.ReadRequest,
 
 		state.Projects = append(state.Projects, projectState)
 	}
-
-	state.ID = types.StringValue("placeholder")
 
 	// Set state
 	diags := resp.State.Set(ctx, &state)
