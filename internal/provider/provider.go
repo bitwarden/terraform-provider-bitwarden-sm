@@ -15,14 +15,14 @@ import (
 )
 
 var (
-	// Ensure BitwardenSecrestsManagerProvider satisfies various provider interfaces.
-	_         provider.Provider              = &BitwardenSecrestsManagerProvider{}
-	_         provider.ProviderWithFunctions = &BitwardenSecrestsManagerProvider{}
+	// Ensure BitwardenSecretsManagerProvider satisfies various provider interfaces.
+	_         provider.Provider              = &BitwardenSecretsManagerProvider{}
+	_         provider.ProviderWithFunctions = &BitwardenSecretsManagerProvider{}
 	statePath                                = ".bw-provider-state"
 )
 
-// BitwardenSecrestsManagerProvider defines the provider implementation.
-type BitwardenSecrestsManagerProvider struct {
+// BitwardenSecretsManagerProvider defines the provider implementation.
+type BitwardenSecretsManagerProvider struct {
 	// version is set to the provider version on release, "dev" when the
 	// provider is built and ran locally, and "test" when running acceptance
 	// testing.
@@ -31,38 +31,49 @@ type BitwardenSecrestsManagerProvider struct {
 
 // BitwardenSecretsManagerProviderModel describes the provider data model.
 type BitwardenSecretsManagerProviderModel struct {
-	ApiUrl      types.String `tfsdk:"api_url"`
-	IdentityUrl types.String `tfsdk:"identity_url"`
-	AccessToken types.String `tfsdk:"access_token"`
+	ApiUrl         types.String `tfsdk:"api_url"`
+	IdentityUrl    types.String `tfsdk:"identity_url"`
+	AccessToken    types.String `tfsdk:"access_token"`
+	OrganizationId types.String `tfsdk:"organization_id"`
 }
 
-func (p *BitwardenSecrestsManagerProvider) Metadata(_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
+func (p *BitwardenSecretsManagerProvider) Metadata(_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
 	resp.TypeName = "bitwarden-sm"
 	resp.Version = p.version
 }
 
-func (p *BitwardenSecrestsManagerProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
+type ProviderDataStruct struct {
+	bitwardenClient sdk.BitwardenClientInterface
+	organizationId  string
+}
+
+func (p *BitwardenSecretsManagerProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "Interact with Bitwarden Secrets Manager.",
 		Attributes: map[string]schema.Attribute{
 			"api_url": schema.StringAttribute{
 				Description: "URI for Bitwarden Secrets Manager API endpoint. May also be provided via BW_API_URL environment variable.",
-				Required:    true,
+				Optional:    true,
 			},
 			"identity_url": schema.StringAttribute{
 				Description: "URI for Bitwarden Secrets Manager IDENTITY endpoint. May also be provided via BW_IDENTITY_API_URL environment variable.",
-				Required:    true,
+				Optional:    true,
 			},
 			"access_token": schema.StringAttribute{
 				Description: "Access token for Bitwarden Secrets Manager endpoints. May also be provided via BW_ACCESS_TOKEN environment variable.",
-				Required:    true,
+				Optional:    true,
+				Sensitive:   true,
+			},
+			"organization_id": schema.StringAttribute{
+				Description: "Organization ID for Bitwarden Secrets Manager endpoints. May also be provided via BW_ORGANIZATION_ID environment variable.",
+				Optional:    true,
 				Sensitive:   true,
 			},
 		},
 	}
 }
 
-func (p *BitwardenSecrestsManagerProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
+func (p *BitwardenSecretsManagerProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
 	// Retrieve provider data from configuration
 	tflog.Info(ctx, "Configuring Bitwarden Secrets Manager bitwardenClient")
 
@@ -103,6 +114,15 @@ func (p *BitwardenSecrestsManagerProvider) Configure(ctx context.Context, req pr
 		)
 	}
 
+	if config.OrganizationId.IsUnknown() {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("access_token"),
+			"Unknown Organization ID for Bitwarden Secrets Manager endpoint",
+			"The provider cannot create the Bitwarden Secrets Manager API bitwardenClient as there is an unknown configuration value for the Organization of Bitwarden Secrets Manager endpoint. "+
+				"Either target apply the source of the value first, set the value statically in the configuration, or use the BW_ORGANIZATION_ID environment variable.",
+		)
+	}
+
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -113,6 +133,7 @@ func (p *BitwardenSecrestsManagerProvider) Configure(ctx context.Context, req pr
 	apiUrl := os.Getenv("BW_API_URL")
 	identityUrl := os.Getenv("BW_IDENTITY_API_URL")
 	accessToken := os.Getenv("BW_ACCESS_TOKEN")
+	organizationId := os.Getenv("BW_ORGANIZATION_ID")
 
 	if !config.ApiUrl.IsNull() {
 		apiUrl = config.ApiUrl.ValueString()
@@ -124,6 +145,10 @@ func (p *BitwardenSecrestsManagerProvider) Configure(ctx context.Context, req pr
 
 	if !config.AccessToken.IsNull() {
 		accessToken = config.AccessToken.ValueString()
+	}
+
+	if !config.OrganizationId.IsNull() {
+		organizationId = config.OrganizationId.ValueString()
 	}
 
 	// If any of the expected configurations are missing, return
@@ -142,7 +167,7 @@ func (p *BitwardenSecrestsManagerProvider) Configure(ctx context.Context, req pr
 	if identityUrl == "" {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("identity_url"),
-			"Missing URI for Bitwarden Secrets Manager API endpoint",
+			"Missing URI for Bitwarden Secrets Manager IDENTITY endpoint",
 			"The provider cannot create the Bitwarden Secrets Manager API bitwardenClient as there is a missing or empty configuration value for the URI of the Bitwarden Secrets Manager IDENTITY endpoint. "+
 				"Set the identity_url value in the configuration or use the BW_IDENTITY_API_URL environment variable. "+
 				"If either is already set, ensure the value is not empty.",
@@ -152,9 +177,19 @@ func (p *BitwardenSecrestsManagerProvider) Configure(ctx context.Context, req pr
 	if accessToken == "" {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("access_token"),
-			"Missing HashiCups API Password",
+			"Missing Bitwarden Secrets Manager Access Token",
 			"The provider cannot create the Bitwarden Secrets Manager API bitwardenClient as there is a missing or empty configuration value for the Access Token of Bitwarden Secrets Manager endpoint. "+
 				"Set the access_token value in the configuration or use the BW_ACCESS_TOKEN environment variable. "+
+				"If either is already set, ensure the value is not empty.",
+		)
+	}
+
+	if organizationId == "" {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("organization_id"),
+			"Missing Bitwarden Secrets Manager Organization ID",
+			"The provider cannot create the Bitwarden Secrets Manager API bitwardenClient as there is a missing or empty configuration value for the Organization ID of Bitwarden Secrets Manager endpoint. "+
+				"Set the organization_id value in the configuration or use the BW_ORGANIZATION_ID environment variable. "+
 				"If either is already set, ensure the value is not empty.",
 		)
 	}
@@ -166,7 +201,9 @@ func (p *BitwardenSecrestsManagerProvider) Configure(ctx context.Context, req pr
 	ctx = tflog.SetField(ctx, "bitwarden_secrets_manager_api_url", apiUrl)
 	ctx = tflog.SetField(ctx, "bitwarden_secrets_manager_identity_url", identityUrl)
 	ctx = tflog.SetField(ctx, "bitwarden_secrets_manager_access_token", accessToken)
+	ctx = tflog.SetField(ctx, "bitwarden_secrets_manager_organization_id", organizationId)
 	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "bitwarden_secrets_manager_access_token")
+	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "bitwarden_secrets_manager_organization_id")
 
 	tflog.Debug(ctx, "Creating Bitwarden Secrets Manager Client")
 
@@ -199,30 +236,34 @@ func (p *BitwardenSecrestsManagerProvider) Configure(ctx context.Context, req pr
 
 	// Make the bitwardenClient available during DataSource and Resource
 	// type Configure methods.
-	resp.DataSourceData = &bitwardenClient
-	resp.ResourceData = &bitwardenClient
+	providerDataStruct := ProviderDataStruct{
+		bitwardenClient,
+		organizationId,
+	}
+	resp.DataSourceData = providerDataStruct
+	resp.ResourceData = providerDataStruct
 
 	tflog.Info(ctx, "Configured Bitwarden Secrets Manager Client", map[string]any{"success": true})
 }
 
-func (p *BitwardenSecrestsManagerProvider) Resources(_ context.Context) []func() resource.Resource {
+func (p *BitwardenSecretsManagerProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{}
 }
 
-func (p *BitwardenSecrestsManagerProvider) DataSources(_ context.Context) []func() datasource.DataSource {
+func (p *BitwardenSecretsManagerProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		NewProjectsDataSource,
 		NewSecretsDataSource,
 	}
 }
 
-func (p *BitwardenSecrestsManagerProvider) Functions(_ context.Context) []func() function.Function {
+func (p *BitwardenSecretsManagerProvider) Functions(_ context.Context) []func() function.Function {
 	return []func() function.Function{}
 }
 
 func New(version string) func() provider.Provider {
 	return func() provider.Provider {
-		return &BitwardenSecrestsManagerProvider{
+		return &BitwardenSecretsManagerProvider{
 			version: version,
 		}
 	}
