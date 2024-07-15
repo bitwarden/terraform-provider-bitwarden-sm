@@ -22,7 +22,8 @@ func NewProjectsDataSource() datasource.DataSource {
 
 // projectsDataSource defines the data source implementation.
 type projectsDataSource struct {
-	bitwardenClient *sdk.BitwardenClientInterface
+	bitwardenClient sdk.BitwardenClientInterface
+	organizationId  string
 }
 
 // projectsDataSourceModel describes the data source data model.
@@ -61,7 +62,7 @@ func (d *projectsDataSource) Schema(_ context.Context, _ datasource.SchemaReques
 						},
 						"organization_id": schema.StringAttribute{
 							Description: "String identifier of the organization the projects belongs to.",
-							Computed:    true,
+							Required:    true,
 						},
 						"creation_date": schema.StringAttribute{
 							Description: "String representation of the creation date of the project.",
@@ -79,7 +80,7 @@ func (d *projectsDataSource) Schema(_ context.Context, _ datasource.SchemaReques
 }
 
 func (d *projectsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	// Add a nil check when handling ProviderData because Terraform
+	// Add a nil check when handling ProviderDataStruct because Terraform
 	// sets that data after it calls the ConfigureProvider RPC.
 	tflog.Info(ctx, "Configuring Datasource")
 	if req.ProviderData == nil {
@@ -87,7 +88,7 @@ func (d *projectsDataSource) Configure(ctx context.Context, req datasource.Confi
 		return
 	}
 
-	client, ok := req.ProviderData.(*sdk.BitwardenClientInterface)
+	providerDataStruct, ok := req.ProviderData.(ProviderDataStruct)
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
@@ -97,15 +98,27 @@ func (d *projectsDataSource) Configure(ctx context.Context, req datasource.Confi
 		return
 	}
 
+	client := providerDataStruct.bitwardenClient
+	organizationId := providerDataStruct.organizationId
+
 	if client == nil {
 		resp.Diagnostics.AddError(
 			"Client Not Initialized",
-			"The Bitwarden bitwardenClient was not properly initialized.",
+			"The Bitwarden bitwardenClient was not properly initialized due to a missing Bitwarden API Client.",
+		)
+		return
+	}
+
+	if organizationId == "" {
+		resp.Diagnostics.AddError(
+			"Client Not Initialized",
+			"The Bitwarden bitwardenClient was not properly initialized due to an empty Organization ID.",
 		)
 		return
 	}
 
 	d.bitwardenClient = client
+	d.organizationId = organizationId
 
 	tflog.Info(ctx, "Datasource Configured")
 }
@@ -123,8 +136,7 @@ func (d *projectsDataSource) Read(ctx context.Context, _ datasource.ReadRequest,
 		return
 	}
 
-	client := *d.bitwardenClient
-	projects, err := client.Projects().List("c9a7982f-8103-48a0-be4c-b1a900b32545")
+	projects, err := d.bitwardenClient.Projects().List(d.organizationId)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to List Projects",

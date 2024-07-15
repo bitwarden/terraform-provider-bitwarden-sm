@@ -1,6 +1,4 @@
-data "bitwarden-sm_secrets" "secrets" {
-    organization_id = "< your organization id >"
-}
+data "bitwarden-sm_secrets" "secrets" {}
 
 output "secrets" {
     value = data.bitwarden-sm_secrets.secrets
