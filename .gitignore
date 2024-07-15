@@ -56,5 +56,10 @@ website/vendor
 
 # Keep windows files with windows line endings
 *.winfile eol=crlf
+
+# Folder for local testing
 /_test/
-/tools/
+
+# Local .env files for testing and development
+.env.*
+.bw-provider-state
