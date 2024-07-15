@@ -62,4 +62,4 @@ website/vendor
 
 # Local .env files for testing and development
 .env.*
-.bw-provider-state*
+.bw-provider-state

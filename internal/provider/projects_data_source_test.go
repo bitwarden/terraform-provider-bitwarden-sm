@@ -45,9 +45,7 @@ func TestAccListOneProject(t *testing.T) {
 				Config: buildProviderConfigFromEnvFile() + `
                        data "bitwarden-sm_projects" "test" {}`,
 				Check: resource.ComposeTestCheckFunc(
-					func(s *terraform.State) error {
-						return verifyIfProjectExistsInOutput(projectId, projectName)(s)
-					},
+					testAccCheckIfProjectExistsInOutput(projectId, projectName),
 				),
 			},
 		},
@@ -61,7 +59,7 @@ func TestAccListOneProject(t *testing.T) {
 	})
 }
 
-func TestAccListTwoProjects(t *testing.T) {
+func TestAccListTwoProject(t *testing.T) {
 	var projectId1, projectId2 string
 	projectName1 := "Test-Project-" + generateRandomString()
 	projectName2 := "Test-Project-" + generateRandomString()
@@ -91,10 +89,10 @@ func TestAccListTwoProjects(t *testing.T) {
                        data "bitwarden-sm_projects" "test" {}`,
 				Check: resource.ComposeTestCheckFunc(
 					func(s *terraform.State) error {
-						return verifyIfProjectExistsInOutput(projectId1, projectName1)(s)
+						return testAccCheckIfProjectExistsInOutput(projectId1, projectName1)(s)
 					},
 					func(s *terraform.State) error {
-						return verifyIfProjectExistsInOutput(projectId2, projectName2)(s)
+						return testAccCheckIfProjectExistsInOutput(projectId2, projectName2)(s)
 					},
 				),
 			},
@@ -109,7 +107,7 @@ func TestAccListTwoProjects(t *testing.T) {
 	})
 }
 
-func verifyIfProjectExistsInOutput(projectId, projectName string) resource.TestCheckFunc {
+func testAccCheckIfProjectExistsInOutput(projectId, projectName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// retrieve the resource by name from state
 		rs, ok := s.RootModule().Resources["data.bitwarden-sm_projects.test"]
@@ -135,6 +133,6 @@ func verifyIfProjectExistsInOutput(projectId, projectName string) resource.TestC
 
 		}
 
-		return fmt.Errorf("project with the ID: %s does not exist\n", projectId)
+		return fmt.Errorf("secret with the ID: %s does not exist\n", projectId)
 	}
 }

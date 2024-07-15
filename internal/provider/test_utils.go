@@ -33,7 +33,7 @@ func newBitwardenClient() (sdk.BitwardenClientInterface, string, error) {
 		return nil, "", err
 	}
 
-	testStatePath := ".bw-provider-state-test"
+	testStatePath := "./"
 	err = bitwardenClient.AccessTokenLogin(accessToken, &testStatePath)
 	if err != nil {
 		return nil, "", err
