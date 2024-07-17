@@ -12,34 +12,34 @@ import (
 
 var (
 	// Ensure provider defined types fully satisfy framework interfaces.
-	_ datasource.DataSource              = &secretsDataSource{}
-	_ datasource.DataSourceWithConfigure = &secretsDataSource{}
+	_ datasource.DataSource              = &listSecretsDataSource{}
+	_ datasource.DataSourceWithConfigure = &listSecretsDataSource{}
 )
 
-func NewSecretsDataSource() datasource.DataSource {
-	return &secretsDataSource{}
+func NewListSecretsDataSource() datasource.DataSource {
+	return &listSecretsDataSource{}
 }
 
-// secretsDataSource defines the data source implementation.
-type secretsDataSource struct {
+// listSecretsDataSource defines the data source implementation.
+type listSecretsDataSource struct {
 	bitwardenClient sdk.BitwardenClientInterface
 	organizationId  string
 }
 
-type secretsDataSourceModel struct {
-	Secrets []secretDataSourceModel `tfsdk:"secrets"`
+type listSecretsDataSourceModel struct {
+	Secrets []listSecretDataSourceModel `tfsdk:"secrets"`
 }
 
-type secretDataSourceModel struct {
-	Id  types.String `tfsdk:"id"`
+type listSecretDataSourceModel struct {
+	ID  types.String `tfsdk:"id"`
 	Key types.String `tfsdk:"key"`
 }
 
-func (s *secretsDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (l *listSecretsDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_secrets"
 }
 
-func (s *secretsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (l *listSecretsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "Fetches a list of secrets accessible by the machine account.",
 		Attributes: map[string]schema.Attribute{
@@ -63,16 +63,16 @@ func (s *secretsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 	}
 }
 
-func (s *secretsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	// Add a nil check when handling ProviderDataStruct because Terraform
+func (l *listSecretsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	// Add a nil check when handling BitwardenSecretsManagerProviderDataStruct because Terraform
 	// sets that data after it calls the ConfigureProvider RPC.
-	tflog.Info(ctx, "Configuring Secrets Datasource")
+	tflog.Info(ctx, "Configuring List Secrets Datasource")
 	if req.ProviderData == nil {
 		tflog.Debug(ctx, "Skipping Datasource Configuration because Provider has not been configured yet.")
 		return
 	}
 
-	providerDataStruct, ok := req.ProviderData.(ProviderDataStruct)
+	providerDataStruct, ok := req.ProviderData.(BitwardenSecretsManagerProviderDataStruct)
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
@@ -101,18 +101,18 @@ func (s *secretsDataSource) Configure(ctx context.Context, req datasource.Config
 		return
 	}
 
-	s.bitwardenClient = client
-	s.organizationId = organizationId
+	l.bitwardenClient = client
+	l.organizationId = organizationId
 
 	tflog.Info(ctx, "Datasource Configured")
 }
 
-func (s *secretsDataSource) Read(ctx context.Context, _ datasource.ReadRequest, resp *datasource.ReadResponse) {
-	tflog.Info(ctx, "Reading Secrets Datasource")
+func (l *listSecretsDataSource) Read(ctx context.Context, _ datasource.ReadRequest, resp *datasource.ReadResponse) {
+	tflog.Info(ctx, "Reading List Secrets Datasource")
 
-	var state secretsDataSourceModel
+	var state listSecretsDataSourceModel
 
-	if s.bitwardenClient == nil {
+	if l.bitwardenClient == nil {
 		resp.Diagnostics.AddError(
 			"Client Not Initialized",
 			"The Bitwarden bitwardenClient was not properly initialized.",
@@ -120,8 +120,7 @@ func (s *secretsDataSource) Read(ctx context.Context, _ datasource.ReadRequest, 
 		return
 	}
 
-	client := s.bitwardenClient
-	secrets, err := client.Secrets().List(s.organizationId)
+	secrets, err := l.bitwardenClient.Secrets().List(l.organizationId)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to List Secrets",
@@ -131,8 +130,8 @@ func (s *secretsDataSource) Read(ctx context.Context, _ datasource.ReadRequest, 
 	}
 
 	for _, secret := range secrets.Data {
-		secretState := secretDataSourceModel{
-			Id:  types.StringValue(secret.ID),
+		secretState := listSecretDataSourceModel{
+			ID:  types.StringValue(secret.ID),
 			Key: types.StringValue(secret.Key),
 		}
 		state.Secrets = append(state.Secrets, secretState)

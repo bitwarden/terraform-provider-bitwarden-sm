@@ -44,7 +44,9 @@ func TestAccListOneProject(t *testing.T) {
 				Config: buildProviderConfigFromEnvFile() + `
                        data "bitwarden-sm_projects" "test" {}`,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIfProjectExistsInOutput(projectId, projectName),
+					func(s *terraform.State) error {
+						return testAccCheckIfProjectExistsInOutput(projectId, projectName)(s)
+					},
 				),
 			},
 		},
@@ -132,6 +134,6 @@ func testAccCheckIfProjectExistsInOutput(projectId, projectName string) resource
 
 		}
 
-		return fmt.Errorf("secret with the ID: %s does not exist\n", projectId)
+		return fmt.Errorf("project with the ID: %s does not exist\n", projectId)
 	}
 }
