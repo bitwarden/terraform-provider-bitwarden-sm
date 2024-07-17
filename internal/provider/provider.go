@@ -256,6 +256,7 @@ func (p *BitwardenSecretsManagerProvider) DataSources(_ context.Context) []func(
 		NewProjectsDataSource,
 		NewListSecretsDataSource,
 		NewSecretDataSource,
+		NewSecretResource,
 	}
 }
 
