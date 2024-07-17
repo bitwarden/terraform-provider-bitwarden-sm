@@ -80,7 +80,7 @@ func (d *projectsDataSource) Schema(_ context.Context, _ datasource.SchemaReques
 }
 
 func (d *projectsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	// Add a nil check when handling ProviderDataStruct because Terraform
+	// Add a nil check when handling BitwardenSecretsManagerProviderDataStruct because Terraform
 	// sets that data after it calls the ConfigureProvider RPC.
 	tflog.Info(ctx, "Configuring Datasource")
 	if req.ProviderData == nil {
@@ -88,11 +88,11 @@ func (d *projectsDataSource) Configure(ctx context.Context, req datasource.Confi
 		return
 	}
 
-	providerDataStruct, ok := req.ProviderData.(ProviderDataStruct)
+	providerDataStruct, ok := req.ProviderData.(BitwardenSecretsManagerProviderDataStruct)
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *sdk.BitwardenClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			fmt.Sprintf("Expected sdk.BitwardenClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
 
 		return
@@ -104,7 +104,7 @@ func (d *projectsDataSource) Configure(ctx context.Context, req datasource.Confi
 	if client == nil {
 		resp.Diagnostics.AddError(
 			"Client Not Initialized",
-			"The Bitwarden bitwardenClient was not properly initialized due to a missing Bitwarden API Client.",
+			"The Bitwarden client was not properly initialized due to a missing Bitwarden API Client.",
 		)
 		return
 	}
@@ -112,7 +112,7 @@ func (d *projectsDataSource) Configure(ctx context.Context, req datasource.Confi
 	if organizationId == "" {
 		resp.Diagnostics.AddError(
 			"Client Not Initialized",
-			"The Bitwarden bitwardenClient was not properly initialized due to an empty Organization ID.",
+			"The Bitwarden client was not properly initialized due to an empty Organization ID.",
 		)
 		return
 	}
@@ -131,7 +131,7 @@ func (d *projectsDataSource) Read(ctx context.Context, _ datasource.ReadRequest,
 	if d.bitwardenClient == nil {
 		resp.Diagnostics.AddError(
 			"Client Not Initialized",
-			"The Bitwarden bitwardenClient was not properly initialized.",
+			"The Bitwarden client was not properly initialized.",
 		)
 		return
 	}

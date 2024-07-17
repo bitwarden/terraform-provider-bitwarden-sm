@@ -42,14 +42,14 @@ func (p *BitwardenSecretsManagerProvider) Metadata(_ context.Context, _ provider
 	resp.Version = p.version
 }
 
-type ProviderDataStruct struct {
+type BitwardenSecretsManagerProviderDataStruct struct {
 	bitwardenClient sdk.BitwardenClientInterface
 	organizationId  string
 }
 
 func (p *BitwardenSecretsManagerProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Interact with Bitwarden Secrets Manager.",
+		Description: "Interacts with Bitwarden Secrets Manager.",
 		Attributes: map[string]schema.Attribute{
 			"api_url": schema.StringAttribute{
 				Description: "URI for Bitwarden Secrets Manager API endpoint. May also be provided via BW_API_URL environment variable.",
@@ -75,7 +75,7 @@ func (p *BitwardenSecretsManagerProvider) Schema(_ context.Context, _ provider.S
 
 func (p *BitwardenSecretsManagerProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
 	// Retrieve provider data from configuration
-	tflog.Info(ctx, "Configuring Bitwarden Secrets Manager bitwardenClient")
+	tflog.Info(ctx, "Configuring Bitwarden Secrets Manager")
 
 	var config BitwardenSecretsManagerProviderModel
 	diags := req.Config.Get(ctx, &config)
@@ -236,10 +236,11 @@ func (p *BitwardenSecretsManagerProvider) Configure(ctx context.Context, req pro
 
 	// Make the bitwardenClient available during DataSource and Resource
 	// type Configure methods.
-	providerDataStruct := ProviderDataStruct{
+	providerDataStruct := BitwardenSecretsManagerProviderDataStruct{
 		bitwardenClient,
 		organizationId,
 	}
+
 	resp.DataSourceData = providerDataStruct
 	resp.ResourceData = providerDataStruct
 
@@ -253,7 +254,8 @@ func (p *BitwardenSecretsManagerProvider) Resources(_ context.Context) []func() 
 func (p *BitwardenSecretsManagerProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		NewProjectsDataSource,
-		NewSecretsDataSource,
+		NewListSecretsDataSource,
+		NewSecretDataSource,
 	}
 }
 

@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestAccZeroSecretsMachineAccountWithNoAccess(t *testing.T) {
+func TestAccListZeroSecretsMachineAccountWithNoAccess(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -34,14 +34,14 @@ func TestAccListOneSecret(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		PreCheck: func() {
-			project, err := bitwardenClient.Projects().Create(organizationId, projectName)
-			if err != nil {
+			project, preCeckError := bitwardenClient.Projects().Create(organizationId, projectName)
+			if preCeckError != nil {
 				t.Fatal("Error creating test project for provider validation.")
 			}
 			projectId = project.ID
 
-			secret, err := bitwardenClient.Secrets().Create(secretKey, "secret", "", organizationId, []string{projectId})
-			if err != nil {
+			secret, preCeckError := bitwardenClient.Secrets().Create(secretKey, "secret", "", organizationId, []string{projectId})
+			if preCeckError != nil {
 				t.Fatal("Error creating test secret for provider validation.")
 			}
 			secretId = secret.ID
