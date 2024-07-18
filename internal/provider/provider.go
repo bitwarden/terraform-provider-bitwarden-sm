@@ -22,7 +22,7 @@ var (
 )
 
 // BitwardenSecrestsManagerProvider defines the provider implementation.
-type BitwardenSecrestsManagerProvider struct {
+type BitwardenSecretsManagerProvider struct {
 	// version is set to the provider version on release, "dev" when the
 	// provider is built and ran locally, and "test" when running acceptance
 	// testing.
