@@ -8,12 +8,14 @@ import (
 	"testing"
 )
 
+// TODO Add List Secrets Data Source Prefix to Test name to make it easier to attribute tests to resources
+
 func TestAccListZeroSecretsMachineAccountWithNoAccess(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: buildProviderConfigFromEnvFile("../../.env.local.no.access") + `
+				Config: buildProviderConfigFromEnvFile(t, "../../.env.local.no.access") + `
                        data "bitwarden-sm_secrets" "test" {}`,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.bitwarden-sm_secrets.test", "secrets.#", "0"),
@@ -34,21 +36,21 @@ func TestAccListOneSecret(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		PreCheck: func() {
-			project, preCeckError := bitwardenClient.Projects().Create(organizationId, projectName)
-			if preCeckError != nil {
+			project, preCheckErr := bitwardenClient.Projects().Create(organizationId, projectName)
+			if preCheckErr != nil {
 				t.Fatal("Error creating test project for provider validation.")
 			}
 			projectId = project.ID
 
-			secret, preCeckError := bitwardenClient.Secrets().Create(secretKey, "secret", "", organizationId, []string{projectId})
-			if preCeckError != nil {
+			secret, preCheckErr := bitwardenClient.Secrets().Create(secretKey, "secret", "", organizationId, []string{projectId})
+			if preCheckErr != nil {
 				t.Fatal("Error creating test secret for provider validation.")
 			}
 			secretId = secret.ID
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: buildProviderConfigFromEnvFile() + `
+				Config: buildProviderConfigFromEnvFile(t) + `
                        data "bitwarden-sm_secrets" "test" {}`,
 				Check: resource.ComposeTestCheckFunc(
 					func(s *terraform.State) error {
@@ -83,27 +85,27 @@ func TestAccListTwoSecrets(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		PreCheck: func() {
-			project, err := bitwardenClient.Projects().Create(organizationId, projectName)
-			if err != nil {
+			project, preCheckErr := bitwardenClient.Projects().Create(organizationId, projectName)
+			if preCheckErr != nil {
 				t.Fatal("Error creating test project for provider validation.")
 			}
 			projectId = project.ID
 
-			secret, err := bitwardenClient.Secrets().Create(secretKey1, "secret", "", organizationId, []string{projectId})
-			if err != nil {
+			secret, preCheckErr := bitwardenClient.Secrets().Create(secretKey1, "secret", "", organizationId, []string{projectId})
+			if preCheckErr != nil {
 				t.Fatal("Error creating test secret for provider validation.")
 			}
 			secretId1 = secret.ID
 
-			secret, err = bitwardenClient.Secrets().Create(secretKey2, "secret", "", organizationId, []string{projectId})
-			if err != nil {
+			secret, preCheckErr = bitwardenClient.Secrets().Create(secretKey2, "secret", "", organizationId, []string{projectId})
+			if preCheckErr != nil {
 				t.Fatal("Error creating test secret for provider validation.")
 			}
 			secretId2 = secret.ID
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: buildProviderConfigFromEnvFile() + `
+				Config: buildProviderConfigFromEnvFile(t) + `
                        data "bitwarden-sm_secrets" "test" {}`,
 				Check: resource.ComposeTestCheckFunc(
 					func(s *terraform.State) error {

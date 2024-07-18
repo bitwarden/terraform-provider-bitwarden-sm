@@ -34,15 +34,15 @@ func TestAccListOneProject(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		PreCheck: func() {
-			project, err := bitwardenClient.Projects().Create(organizationId, projectName)
-			if err != nil {
+			project, preCheckErr := bitwardenClient.Projects().Create(organizationId, projectName)
+			if preCheckErr != nil {
 				t.Fatal("Error creating test project for provider validation.")
 			}
 			projectId = project.ID
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: buildProviderConfigFromEnvFile() + `
+				Config: buildProviderConfigFromEnvFile(t) + `
                        data "bitwarden-sm_projects" "test" {}`,
 				Check: resource.ComposeTestCheckFunc(
 					func(s *terraform.State) error {
@@ -72,14 +72,14 @@ func TestAccListTwoProject(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		PreCheck: func() {
-			project, err := bitwardenClient.Projects().Create(organizationId, projectName1)
-			if err != nil {
+			project, preCheckErr := bitwardenClient.Projects().Create(organizationId, projectName1)
+			if preCheckErr != nil {
 				t.Fatal("Error creating test project for provider validation.")
 			}
 			projectId1 = project.ID
 
-			project, err = bitwardenClient.Projects().Create(organizationId, projectName2)
-			if err != nil {
+			project, preCheckErr = bitwardenClient.Projects().Create(organizationId, projectName2)
+			if preCheckErr != nil {
 				t.Fatal("Error creating test project for provider validation.")
 			}
 			projectId2 = project.ID
@@ -87,7 +87,7 @@ func TestAccListTwoProject(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: buildProviderConfigFromEnvFile() + `
+				Config: buildProviderConfigFromEnvFile(t) + `
                        data "bitwarden-sm_projects" "test" {}`,
 				Check: resource.ComposeTestCheckFunc(
 					func(s *terraform.State) error {

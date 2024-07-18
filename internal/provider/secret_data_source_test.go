@@ -7,12 +7,14 @@ import (
 	"testing"
 )
 
+// TODO Add Secret Data Source Prefix to Test name to make it easier to attribute tests to resources
+
 func TestAccExpectErrorOnMissingSecretId(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: buildProviderConfigFromEnvFile() + `
+				Config: buildProviderConfigFromEnvFile(t) + `
                        data "bitwarden-sm_secret" "test" {}`,
 				ExpectError: regexp.MustCompile("The argument \"id\" is required, but no definition was found."),
 			},
@@ -54,7 +56,7 @@ func TestAccVerifySecretData(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: buildProviderConfigFromEnvFile() + `
+				Config: buildProviderConfigFromEnvFile(t) + `
                             data "bitwarden-sm_secret" "secret" {
                                 id ="` + secretId + `"
                             }`,

@@ -76,6 +76,7 @@ BW_API_URL="https://your-api-test-endpoint.example.com"
 BW_IDENTITY_API_URL="https://your-identity-test-endpoint.example.com"
 BW_ACCESS_TOKEN="<your machine account access token >"
 BW_ORGANIZATION_ID="< organization id  >"
+BW_STATE_FILE=".bw-state-test"
 ```
 
 *Important:* The second file `.env.local.no.access` needs to be configured with an access token belonging to a machine account with no project access.

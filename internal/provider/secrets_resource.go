@@ -28,18 +28,14 @@ type secretResource struct {
 }
 
 type secretResourceModel struct {
-	ID             types.String            `tfsdk:"id"`
-	Key            types.String            `tfsdk:"key"`
-	Value          types.String            `tfsdk:"value"`
-	Note           types.String            `tfsdk:"note"`
-	ProjectIDs     []secretProjectIdsModel `tfsdk:"project_ids"`
-	OrganizationID types.String            `tfsdk:"organization_id"`
-	CreationDate   types.String            `tfsdk:"creation_date"`
-	RevisionDate   types.String            `tfsdk:"revision_date"`
-}
-
-type secretProjectIdsModel struct {
-	ProjectID types.String `tfsdk:"project_id"`
+	ID             types.String `tfsdk:"id"`
+	Key            types.String `tfsdk:"key"`
+	Value          types.String `tfsdk:"value"`
+	Note           types.String `tfsdk:"note"`
+	ProjectID      types.String `tfsdk:"project_id"`
+	OrganizationID types.String `tfsdk:"organization_id"`
+	CreationDate   types.String `tfsdk:"creation_date"`
+	RevisionDate   types.String `tfsdk:"revision_date"`
 }
 
 func (s *secretResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -65,23 +61,11 @@ func (s *secretResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"note": schema.StringAttribute{
 				Description: "The note of the secret.",
-				Computed:    true,
+				Optional:    true,
 			},
-			"project_ids": schema.ListNestedAttribute{
-				Description: "The project ids of the secret.",
-				Computed:    true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"project_id": schema.StringAttribute{
-							Description: "One project id of the secret.",
-							Computed:    true,
-						},
-					},
-				},
-			},
-			"organization_id": schema.StringAttribute{
-				Description: "The organization id of the secret.",
-				Required:    true,
+			"project_id": schema.StringAttribute{
+				Description: "Project id of the secret.",
+				Optional:    true,
 			},
 			"creation_date": schema.StringAttribute{
 				Description: "The creation date of the secret.",
@@ -156,17 +140,12 @@ func (s *secretResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	var projectIDs []string
-	for _, projectID := range plan.ProjectIDs {
-		projectIDs = append(projectIDs, projectID.ProjectID.ValueString())
-	}
-
 	secret, err := s.bitwardenClient.Secrets().Create(
 		plan.Key.ValueString(),
 		plan.Value.ValueString(),
 		plan.Note.ValueString(),
-		plan.OrganizationID.ValueString(),
-		projectIDs,
+		s.organizationId,
+		[]string{plan.ProjectID.ValueString()},
 	)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -177,6 +156,7 @@ func (s *secretResource) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	plan.ID = types.StringValue(secret.ID)
+	plan.OrganizationID = types.StringValue(secret.OrganizationID)
 	plan.CreationDate = types.StringValue(secret.CreationDate)
 	plan.RevisionDate = types.StringValue(secret.RevisionDate)
 
@@ -186,7 +166,6 @@ func (s *secretResource) Create(ctx context.Context, req resource.CreateRequest,
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 }
 
 func (s *secretResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -219,7 +198,7 @@ func (s *secretResource) Read(ctx context.Context, req resource.ReadRequest, res
 	state.Key = types.StringValue(secret.Key)
 	state.Value = types.StringValue(secret.Value)
 	state.Note = types.StringValue(secret.Note)
-	state.ProjectIDs = []secretProjectIdsModel{{ProjectID: types.StringValue(*secret.ProjectID)}}
+	state.ProjectID = types.StringValue(*secret.ProjectID)
 	state.OrganizationID = types.StringValue(secret.OrganizationID)
 	state.CreationDate = types.StringValue(secret.CreationDate)
 	state.RevisionDate = types.StringValue(secret.RevisionDate)
@@ -232,12 +211,82 @@ func (s *secretResource) Read(ctx context.Context, req resource.ReadRequest, res
 	}
 }
 
-func (s *secretResource) Update(_ context.Context, _ resource.UpdateRequest, _ *resource.UpdateResponse) {
-	//TODO implement me
-	panic("implement me")
+func (s *secretResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	// Retrieve values from plan
+	var plan secretResourceModel
+	diags := req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var state secretResourceModel
+	diags = req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if s.bitwardenClient == nil {
+		resp.Diagnostics.AddError(
+			"Client Not Initialized",
+			"The Bitwarden client was not properly initialized.",
+		)
+		return
+	}
+
+	secret, err := s.bitwardenClient.Secrets().Update(
+		state.ID.ValueString(),
+		plan.Key.ValueString(),
+		plan.Value.ValueString(),
+		plan.Note.ValueString(),
+		state.OrganizationID.ValueString(),
+		[]string{plan.ProjectID.ValueString()},
+	)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to Update Secret",
+			err.Error(),
+		)
+		return
+	}
+
+	plan.ID = types.StringValue(secret.ID)
+	plan.CreationDate = types.StringValue(secret.CreationDate)
+	plan.RevisionDate = types.StringValue(secret.RevisionDate)
+
+	// Set state to fully populated data
+	diags = resp.State.Set(ctx, plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
-func (s *secretResource) Delete(_ context.Context, _ resource.DeleteRequest, _ *resource.DeleteResponse) {
-	//TODO implement me
-	panic("implement me")
+func (s *secretResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var plan secretResourceModel
+	diags := req.State.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if s.bitwardenClient == nil {
+		resp.Diagnostics.AddError(
+			"Client Not Initialized",
+			"The Bitwarden client was not properly initialized.",
+		)
+		return
+	}
+
+	// TODO validate if we need to check SecretsDeleteResponse.Data[0].Error as well
+	// TODO validate if we need to check SecretsDeleteResponse.Data[0].ID and what it means, e.g. ID of the deleted secret
+	_, err := s.bitwardenClient.Secrets().Delete([]string{plan.ID.ValueString()})
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to Delete Secret",
+			err.Error(),
+		)
+		return
+	}
 }

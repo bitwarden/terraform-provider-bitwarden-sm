@@ -7,6 +7,8 @@ import (
 	"testing"
 )
 
+// TODO Add Provider Prefix to Test name to make it easier to attribute tests to resources
+
 func TestAccExpectErrorOnMissingApiUrlInProviderConfigString(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
