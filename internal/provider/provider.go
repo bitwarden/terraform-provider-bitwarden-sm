@@ -15,13 +15,13 @@ import (
 )
 
 var (
-	// Ensure BitwardenSecrestsManagerProvider satisfies various provider interfaces.
-	_         provider.Provider              = &BitwardenSecrestsManagerProvider{}
-	_         provider.ProviderWithFunctions = &BitwardenSecrestsManagerProvider{}
+	// Ensure BitwardenSecretsManagerProvider satisfies various provider interfaces.
+	_         provider.Provider              = &BitwardenSecretsManagerProvider{}
+	_         provider.ProviderWithFunctions = &BitwardenSecretsManagerProvider{}
 	statePath                                = ".bw-provider-state"
 )
 
-// BitwardenSecrestsManagerProvider defines the provider implementation.
+// BitwardenSecretsManagerProvider defines the provider implementation.
 type BitwardenSecretsManagerProvider struct {
 	// version is set to the provider version on release, "dev" when the
 	// provider is built and ran locally, and "test" when running acceptance
@@ -36,12 +36,12 @@ type BitwardenSecretsManagerProviderModel struct {
 	AccessToken types.String `tfsdk:"access_token"`
 }
 
-func (p *BitwardenSecrestsManagerProvider) Metadata(_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
+func (p *BitwardenSecretsManagerProvider) Metadata(_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
 	resp.TypeName = "bitwarden-sm"
 	resp.Version = p.version
 }
 
-func (p *BitwardenSecrestsManagerProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
+func (p *BitwardenSecretsManagerProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "Interact with Bitwarden Secrets Manager.",
 		Attributes: map[string]schema.Attribute{
@@ -62,7 +62,7 @@ func (p *BitwardenSecrestsManagerProvider) Schema(_ context.Context, _ provider.
 	}
 }
 
-func (p *BitwardenSecrestsManagerProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
+func (p *BitwardenSecretsManagerProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
 	// Retrieve provider data from configuration
 	tflog.Info(ctx, "Configuring Bitwarden Secrets Manager bitwardenClient")
 
@@ -205,23 +205,23 @@ func (p *BitwardenSecrestsManagerProvider) Configure(ctx context.Context, req pr
 	tflog.Info(ctx, "Configured Bitwarden Secrets Manager Client", map[string]any{"success": true})
 }
 
-func (p *BitwardenSecrestsManagerProvider) Resources(_ context.Context) []func() resource.Resource {
+func (p *BitwardenSecretsManagerProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{}
 }
 
-func (p *BitwardenSecrestsManagerProvider) DataSources(_ context.Context) []func() datasource.DataSource {
+func (p *BitwardenSecretsManagerProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		NewProjectsDataSource,
 	}
 }
 
-func (p *BitwardenSecrestsManagerProvider) Functions(_ context.Context) []func() function.Function {
+func (p *BitwardenSecretsManagerProvider) Functions(_ context.Context) []func() function.Function {
 	return []func() function.Function{}
 }
 
 func New(version string) func() provider.Provider {
 	return func() provider.Provider {
-		return &BitwardenSecrestsManagerProvider{
+		return &BitwardenSecretsManagerProvider{
 			version: version,
 		}
 	}
