@@ -18,20 +18,16 @@ Fetches the content of a secret.
 ### Required
 
 - `key` (String) The key of the secret.
-- `organization_id` (String) The organization id of the secret.
 - `value` (String, Sensitive) The value of the secret.
+
+### Optional
+
+- `note` (String) The note of the secret.
+- `project_id` (String) Project id of the secret.
 
 ### Read-Only
 
 - `creation_date` (String) The creation date of the secret.
 - `id` (String) The id of the secret.
-- `note` (String) The note of the secret.
-- `project_ids` (Attributes List) The project ids of the secret. (see [below for nested schema](#nestedatt--project_ids))
+- `organization_id` (String) Organization id of the secret.
 - `revision_date` (String) The revision date of the secret.
-
-<a id="nestedatt--project_ids"></a>
-### Nested Schema for `project_ids`
-
-Read-Only:
-
-- `project_id` (String) One project id of the secret.

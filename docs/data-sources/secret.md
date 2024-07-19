@@ -24,7 +24,7 @@ Fetches the content of a secret.
 - `creation_date` (String) The creation date of the secret.
 - `key` (String) The key of the secret.
 - `note` (String) The note of the secret.
-- `organization_id` (String) The organization id of the secret.
+- `organization_id` (String) Organization id of the secret.
 - `project_id` (String) The project id of the secret.
 - `revision_date` (String) The revision date of the secret.
 - `value` (String, Sensitive) The value of the secret.
