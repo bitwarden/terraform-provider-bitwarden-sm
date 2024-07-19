@@ -8,24 +8,22 @@ import (
 	"testing"
 )
 
-// TODO Add List Secrets Data Source Prefix to Test name to make it easier to attribute tests to resources
-
-func TestAccListZeroSecretsMachineAccountWithNoAccess(t *testing.T) {
+func TestAccDatasourceListSecretsZeroSecretsMachineAccountWithNoAccess(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: buildProviderConfigFromEnvFile(t, "../../.env.local.no.access") + `
-                       data "bitwarden-sm_secrets" "test" {}`,
+                       data "bitwarden-sm_list_secrets" "test" {}`,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.bitwarden-sm_secrets.test", "secrets.#", "0"),
+					resource.TestCheckResourceAttr("data.bitwarden-sm_list_secrets.test", "secrets.#", "0"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccListOneSecret(t *testing.T) {
+func TestAccDatasourceListSecretsOneSecret(t *testing.T) {
 	var secretId, projectId string
 	secretKey := "Test-Secret-" + generateRandomString()
 	projectName := "Test-Project-" + generateRandomString()
@@ -51,7 +49,7 @@ func TestAccListOneSecret(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: buildProviderConfigFromEnvFile(t) + `
-                       data "bitwarden-sm_secrets" "test" {}`,
+                       data "bitwarden-sm_list_secrets" "test" {}`,
 				Check: resource.ComposeTestCheckFunc(
 					func(s *terraform.State) error {
 						return testAccCheckIfSecretExistsInOutput(secretId, secretKey)(s)
@@ -73,7 +71,7 @@ func TestAccListOneSecret(t *testing.T) {
 	})
 }
 
-func TestAccListTwoSecrets(t *testing.T) {
+func TestAccDatasourceListSecretsTwoSecrets(t *testing.T) {
 	var secretId1, secretId2, projectId string
 	secretKey1 := "Test-Secret-" + generateRandomString()
 	secretKey2 := "Test-Secret-" + generateRandomString()
@@ -106,7 +104,7 @@ func TestAccListTwoSecrets(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: buildProviderConfigFromEnvFile(t) + `
-                       data "bitwarden-sm_secrets" "test" {}`,
+                       data "bitwarden-sm_list_secrets" "test" {}`,
 				Check: resource.ComposeTestCheckFunc(
 					func(s *terraform.State) error {
 						return testAccCheckIfSecretExistsInOutput(secretId1, secretKey1)(s)
@@ -134,7 +132,7 @@ func TestAccListTwoSecrets(t *testing.T) {
 func testAccCheckIfSecretExistsInOutput(secretId, secretKey string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// retrieve the resource by name from state
-		rs, ok := s.RootModule().Resources["data.bitwarden-sm_secrets.test"]
+		rs, ok := s.RootModule().Resources["data.bitwarden-sm_list_secrets.test"]
 		if !ok {
 			return fmt.Errorf("not found: %s", "data.bitwarden-sm_secrets.test")
 		}
