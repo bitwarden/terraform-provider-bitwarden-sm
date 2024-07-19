@@ -7,9 +7,7 @@ import (
 	"testing"
 )
 
-// TODO Add Secret Data Source Prefix to Test name to make it easier to attribute tests to resources
-
-func TestAccExpectErrorOnMissingSecretId(t *testing.T) {
+func TestAccDatasourceSecretExpectErrorOnMissingSecretId(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -22,7 +20,7 @@ func TestAccExpectErrorOnMissingSecretId(t *testing.T) {
 	})
 }
 
-func TestAccVerifySecretData(t *testing.T) {
+func TestAccDatasourceSecretVerifySecretData(t *testing.T) {
 	var secretId, projectId string
 	secretKey := "Test-Secret-" + generateRandomString()
 	secretValue := generateRandomString()

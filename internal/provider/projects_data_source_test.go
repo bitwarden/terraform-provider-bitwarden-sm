@@ -24,7 +24,7 @@ import (
 //    })
 //}
 
-func TestAccListOneProject(t *testing.T) {
+func TestAccDatasourceProjectsListOneProject(t *testing.T) {
 	var projectId string
 	projectName := "Test-Project-" + generateRandomString()
 	bitwardenClient, organizationId, err := newBitwardenClient()
@@ -61,7 +61,7 @@ func TestAccListOneProject(t *testing.T) {
 	})
 }
 
-func TestAccListTwoProject(t *testing.T) {
+func TestAccDatasourceProjectsListTwoProject(t *testing.T) {
 	var projectId1, projectId2 string
 	projectName1 := "Test-Project-" + generateRandomString()
 	projectName2 := "Test-Project-" + generateRandomString()
