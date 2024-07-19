@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestAccSecretResourceExpectErrorOnMissingKey(t *testing.T) {
+func TestAccResourceSecretExpectErrorOnMissingKey(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -23,7 +23,7 @@ func TestAccSecretResourceExpectErrorOnMissingKey(t *testing.T) {
 	})
 }
 
-func TestAccSecretResourceExpectErrorOnMissingValue(t *testing.T) {
+func TestAccResourceSecretExpectErrorOnMissingValue(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -38,7 +38,7 @@ func TestAccSecretResourceExpectErrorOnMissingValue(t *testing.T) {
 	})
 }
 
-func TestAccSecretResourceCreateSecret(t *testing.T) {
+func TestAccResourceSecretCreateSecret(t *testing.T) {
 	secretKey := "Test-Secret-" + generateRandomString()
 	secretValue := generateRandomString()
 	secretNote := generateRandomString()
@@ -80,7 +80,7 @@ func TestAccSecretResourceCreateSecret(t *testing.T) {
 	})
 }
 
-func TestAccSecretResourceUpdateSecret(t *testing.T) {
+func TestAccResourceSecretUpdateSecret(t *testing.T) {
 	secretKey := "Test-Secret-" + generateRandomString()
 	secretValue := generateRandomString()
 	updatedSecretValue := generateRandomString()
@@ -135,7 +135,7 @@ func TestAccSecretResourceUpdateSecret(t *testing.T) {
 	})
 }
 
-func TestAccSecretResourceDeleteSecret(t *testing.T) {
+func TestAccResourceSecretDeleteSecret(t *testing.T) {
 	secretKey := "Test-Secret-" + generateRandomString()
 	secretValue := generateRandomString()
 	secretNote := generateRandomString()

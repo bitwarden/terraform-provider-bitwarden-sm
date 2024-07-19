@@ -67,6 +67,10 @@ func (s *secretResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 				Description: "Project id of the secret.",
 				Optional:    true,
 			},
+			"organization_id": schema.StringAttribute{
+				Description: "Organization id of the secret.",
+				Computed:    true,
+			},
 			"creation_date": schema.StringAttribute{
 				Description: "The creation date of the secret.",
 				Computed:    true,
@@ -252,6 +256,7 @@ func (s *secretResource) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	plan.ID = types.StringValue(secret.ID)
+	plan.OrganizationID = types.StringValue(secret.OrganizationID)
 	plan.CreationDate = types.StringValue(secret.CreationDate)
 	plan.RevisionDate = types.StringValue(secret.RevisionDate)
 
