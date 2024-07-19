@@ -68,6 +68,10 @@ func (s *secretDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 				Description: "The project id of the secret.",
 				Computed:    true,
 			},
+			"organization_id": schema.StringAttribute{
+				Description: "Organization id of the secret.",
+				Computed:    true,
+			},
 			"creation_date": schema.StringAttribute{
 				Description: "The creation date of the secret.",
 				Computed:    true,
