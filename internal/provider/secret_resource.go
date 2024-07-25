@@ -3,6 +3,7 @@ package provider
 import (
 	"fmt"
 	"github.com/bitwarden/sdk-go"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -12,8 +13,9 @@ import (
 
 var (
 	// Ensure provider defined types fully satisfy framework interfaces.
-	_ resource.Resource              = &secretResource{}
-	_ resource.ResourceWithConfigure = &secretResource{}
+	_ resource.Resource                = &secretResource{}
+	_ resource.ResourceWithConfigure   = &secretResource{}
+	_ resource.ResourceWithImportState = &secretResource{}
 )
 
 // NewSecretResource is a helper function to simplify the provider implementation.
@@ -239,13 +241,30 @@ func (s *secretResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
+	key := plan.Key.ValueString()
+	if key == "" {
+		key = state.Key.ValueString()
+	}
+	value := plan.Value.ValueString()
+	if value == "" {
+		value = state.Value.ValueString()
+	}
+	note := plan.Note.ValueString()
+	if note == "" {
+		note = state.Note.ValueString()
+	}
+	projectID := plan.ProjectID.ValueString()
+	if projectID == "" {
+		projectID = state.ProjectID.ValueString()
+	}
+
 	secret, err := s.bitwardenClient.Secrets().Update(
 		state.ID.ValueString(),
-		plan.Key.ValueString(),
-		plan.Value.ValueString(),
-		plan.Note.ValueString(),
+		key,
+		value,
+		note,
 		state.OrganizationID.ValueString(),
-		[]string{plan.ProjectID.ValueString()},
+		[]string{projectID},
 	)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -284,9 +303,7 @@ func (s *secretResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		return
 	}
 
-	// TODO validate if we need to check SecretsDeleteResponse.Data[0].Error as well
-	// TODO validate if we need to check SecretsDeleteResponse.Data[0].ID and what it means, e.g. ID of the deleted secret
-	_, err := s.bitwardenClient.Secrets().Delete([]string{plan.ID.ValueString()})
+	secretDeleteResponse, err := s.bitwardenClient.Secrets().Delete([]string{plan.ID.ValueString()})
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unable to Delete Secret",
@@ -294,4 +311,15 @@ func (s *secretResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		)
 		return
 	}
+	if secretDeleteResponse.Data[0].Error != nil {
+		resp.Diagnostics.AddError(
+			"Error deleting Secret",
+			*secretDeleteResponse.Data[0].Error,
+		)
+	}
+}
+
+func (s *secretResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	// Retrieve import ID and save to id attribute
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
