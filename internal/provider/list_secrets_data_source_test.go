@@ -34,14 +34,14 @@ func TestAccListOneSecret(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		PreCheck: func() {
-			project, preCeckError := bitwardenClient.Projects().Create(organizationId, projectName)
-			if preCeckError != nil {
+			project, preCheckErr := bitwardenClient.Projects().Create(organizationId, projectName)
+			if preCheckErr != nil {
 				t.Fatal("Error creating test project for provider validation.")
 			}
 			projectId = project.ID
 
-			secret, preCeckError := bitwardenClient.Secrets().Create(secretKey, "secret", "", organizationId, []string{projectId})
-			if preCeckError != nil {
+			secret, preCheckErr := bitwardenClient.Secrets().Create(secretKey, "secret", "", organizationId, []string{projectId})
+			if preCheckErr != nil {
 				t.Fatal("Error creating test secret for provider validation.")
 			}
 			secretId = secret.ID
