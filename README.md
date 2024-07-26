@@ -22,7 +22,7 @@ go install .
 ## Adding Dependencies
 
 This provider uses [Go modules](https://github.com/golang/go/wiki/Modules).
-Please see the Go documentation for the most up to date information about using Go modules.
+Please see the Go documentation for the most up-to-date information about using Go modules.
 
 To add a new dependency `github.com/author/dependency` to your Terraform provider:
 
@@ -45,9 +45,29 @@ To compile the provider, run `go install`. This will build the provider and put 
 
 To generate or update documentation, run `go generate`.
 
-In order to run the full suite of Acceptance tests, run `make testacc`.
+## Acceptance Tests
+
+In order to run the full suite of Acceptance tests, you need to provide the following 2 `.env` files:
+
+1. `.env.local.test`
+2. `.env.local.no.access`
+
+Both files should contain the following configuration values.
+
+```text
+BW_API_URL="https://your-api-test-endpoint.example.com"
+BW_IDENTITY_API_URL="https://your-identity-test-endpoint.example.com"
+BW_ACCESS_TOKEN="<your machine account access token >"
+BW_ORGANIZATION_ID="< organization id  >"
+```
+
+*Important:* The second file `.env.local.no.access` needs to be configured with an access token belonging to a machine account with no project access.
+
+The file [`provider_test.go`](./internal/provider/provider_test.go) uses this file to create the necessary provider configuration.
 
 *Note:* Acceptance tests create real resources, and often cost money to run.
+
+If everything is provided, one can execute all acceptance tests with `make`:
 
 ```shell
 make testacc
