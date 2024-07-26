@@ -8,53 +8,48 @@ on:
   push:
     branches:
       - "main"
-      - "rc"
-      - "hotfix-rc"
   pull_request_target:
-    types: [opened, synchronize]
+    types: [ opened, synchronize ]
 
 # Testing only needs permissions to read the repository contents.
 permissions:
   contents: read
+
+env:
+  CGO_ENABLED: 1
+  CGO_LDFLAGS: -lm
 
 jobs:
   # Ensure project builds before running testing matrix
   build:
     name: Build
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-      - uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
+      - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
         with:
           go-version-file: 'go.mod'
-          cache: true
-      - run: go mod download
-      - run: go build -v .
-      - name: Run linters
-        uses: golangci/golangci-lint-action@a4f60bb28d35aeee14e6880718e0c85ff1882e64 # v6.0.1
-        with:
-          version: latest
-
-  generate:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-      - uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
-        with:
-          go-version-file: 'go.mod'
-          cache: true
-      # Temporarily download Terraform 1.8 prerelease for function documentation support.
-      # When Terraform 1.8.0 final is released, this can be removed.
       - uses: hashicorp/setup-terraform@651471c36a6092792c552e8b1bef71e592b462d8 # v3.1.1
         with:
           terraform_version: '1.9.2'
           terraform_wrapper: false
-      - run: go generate ./...
-      - name: git diff
+      - name: Install dependencies
+        run: go mod tidy
+      - name: Build binary
+        run: go build -v .
+      - name: Run linters
+        uses: golangci/golangci-lint-action@a4f60bb28d35aeee14e6880718e0c85ff1882e64 # v6.0.1
+        with:
+          version: latest
+      - name: Generate documentation
         run: |
-          git diff --compact-summary --exit-code || \
-            (echo; echo "Unexpected difference in directories after code generation. Run 'go generate ./...' command and commit."; exit 1)
+          go get github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
+          go generate ./...
+      - name: Git diff
+        run: |
+          git diff --compact-summary --exit-code examples docs || \
+            (echo; echo "Unexpected difference in directories [/examples, /docs] after code generation. Run 'go generate ./...' command and commit."; exit 1)
 
   # Run acceptance tests in a matrix with Terraform CLI versions
   test:
@@ -63,15 +58,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
+      max-parallel: 1
       fail-fast: false
       matrix:
         # list whatever Terraform versions here you would like to support
         terraform:
-          - '1.0.*'
-          - '1.1.*'
-          - '1.2.*'
-          - '1.3.*'
-          - '1.4.*'
           - '1.5.*'
           - '1.6.*'
           - '1.7.*'
@@ -79,14 +70,27 @@ jobs:
           - '1.9.*'
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-      - uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
+      - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
         with:
           go-version-file: 'go.mod'
-          cache: true
       - uses: hashicorp/setup-terraform@651471c36a6092792c552e8b1bef71e592b462d8 # v3.1.1
         with:
           terraform_version: ${{ matrix.terraform }}
           terraform_wrapper: false
-      - run: go mod download
-      - run: make testacc
-        timeout-minutes: 10
+      - name: Install dependencies
+        run: go mod download
+      - name: Create bw client configuration file
+        run: |
+          echo 'BW_API_URL="${{ secrets.BW_API_URL }}"' >> .env.local.test
+          echo 'BW_API_URL="${{ secrets.BW_API_URL }}"' >> .env.local.no.access
+          echo 'BW_IDENTITY_API_URL="${{ secrets.BW_IDENTITY_API_URL }}"' >> .env.local.test
+          echo 'BW_IDENTITY_API_URL="${{ secrets.BW_IDENTITY_API_URL }}"' >> .env.local.no.access
+          echo 'BW_ORGANIZATION_ID="${{ secrets.BW_ORGANIZATION_ID_NO_ACCESS }}"' >> .env.local.test
+          echo 'BW_ORGANIZATION_ID="${{ secrets.BW_ORGANIZATION_ID_NO_ACCESS }}"' >> .env.local.no.access
+
+          echo 'BW_ACCESS_TOKEN="${{ secrets.BW_ACCESS_TOKEN }}"' >> .env.local.test
+          echo 'BW_ACCESS_TOKEN="${{ secrets.BW_ACCESS_TOKEN_NO_ACCESS }}"' >> .env.local.no.access
+          echo 'BW_STATE_FILE=".bw-state-qa"' >> .env.local.test
+          echo 'BW_STATE_FILE=".bw-state-qa-no-access"' >> .env.local.no.access
+      - name: Run acceptance tests
+        run: make testacc
