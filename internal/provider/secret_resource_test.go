@@ -24,21 +24,6 @@ func TestAccResourceSecretExpectErrorOnMissingKey(t *testing.T) {
 	})
 }
 
-func TestAccResourceSecretExpectErrorOnMissingValue(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: buildProviderConfigFromEnvFile(t) + `
-                       resource "bitwarden-sm_secret" "test" {
-                                key          = "mock-key"
-                            }`,
-				ExpectError: regexp.MustCompile("The argument \"value\" is required, but no definition was found."),
-			},
-		},
-	})
-}
-
 func TestAccResourceSecretCreateSecret(t *testing.T) {
 	secretKey := "Test-Secret-" + generateRandomString()
 	secretValue := generateRandomString()

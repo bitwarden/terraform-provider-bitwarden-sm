@@ -35,7 +35,50 @@ Then commit the changes to `go.mod` and `go.sum`.
 
 ## Using the provider
 
-* work in progress
+### Importing an existing Secret into Terraform State
+
+To import a secret into the `terraform` state and configuration, the following steps are necessary:
+
+1. Add a secret resource to the `terraform` configuration file:
+    ```terraform
+    resource "bitwarden-sm_secret" "secret" {}
+    ```
+2. Get the ID of the secret to be imported from Bitwarden Secrets Manager
+3. Execute the following command to import the secret into the `terraform` state:
+    ```bash
+    $ terraform import "bitwarden-sm_secret.secret" "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
+    bitwarden-sm_secret.secret: Import prepared!
+    Prepared bitwarden-sm_secret for import
+    bitwarden-sm_secret.secret: Refreshing state... [id=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx]
+
+    Import successful!
+
+    The resources that were imported are shown above. These resources are now in
+    your Terraform state and will henceforth be managed by Terraform.
+    ```
+4. Execute `terraform show` in order to see the imported information. The most important one for the next step is `key`:
+    ```bash
+   $ terraform show
+
+    # bitwarden-sm_secret.secret:
+    resource "bitwarden-sm_secret" "secret" {
+      creation_date   = "2024-07-01T00:00:00.000000000Z"
+      id              = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+      key             = "Key"
+      note            = "Note"
+      organization_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+      project_id      = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+      revision_date   = "2024-07-01T00:00:00.000000000Z"
+      value           = (sensitive value)
+    }
+    ```
+5. Take the `key` and update the `terraform` configuration file. This is necessary because `key` is the only required configuration value.
+    ```terraform
+    resource "bitwarden-sm_secret" "secret" {
+      key = "Key"
+    }
+    ```
 
 ## Developing the Provider
 

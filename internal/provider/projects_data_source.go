@@ -62,7 +62,7 @@ func (d *projectsDataSource) Schema(_ context.Context, _ datasource.SchemaReques
 						},
 						"organization_id": schema.StringAttribute{
 							Description: "String identifier of the organization the projects belongs to.",
-							Required:    true,
+							Computed:    true,
 						},
 						"creation_date": schema.StringAttribute{
 							Description: "String representation of the creation date of the project.",

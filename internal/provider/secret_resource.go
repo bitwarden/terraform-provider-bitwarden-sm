@@ -6,9 +6,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"golang.org/x/net/context"
+	"math/rand"
+	"time"
 )
 
 var (
@@ -51,6 +55,9 @@ func (s *secretResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			"id": schema.StringAttribute{
 				Description: "The id of the secret.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"key": schema.StringAttribute{
 				Description: "The key of the secret.",
@@ -58,24 +65,33 @@ func (s *secretResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"value": schema.StringAttribute{
 				Description: "The value of the secret.",
-				Required:    true,
+				Computed:    true,
+				Optional:    true,
 				Sensitive:   true,
 			},
 			"note": schema.StringAttribute{
 				Description: "The note of the secret.",
+				Computed:    true,
 				Optional:    true,
 			},
 			"project_id": schema.StringAttribute{
 				Description: "Project id of the secret.",
+				Computed:    true,
 				Optional:    true,
 			},
 			"organization_id": schema.StringAttribute{
 				Description: "Organization id of the secret.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"creation_date": schema.StringAttribute{
 				Description: "The creation date of the secret.",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"revision_date": schema.StringAttribute{
 				Description: "The revision date of the secret.",
@@ -146,9 +162,17 @@ func (s *secretResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
+	// TODO: Dummy implementation for testing purposes, replace once secretValueCreate(rules... string) is part of go-sdk
+	var value string
+	if plan.Value.IsUnknown() {
+		value = createSecretValue()
+	} else {
+		value = plan.Value.ValueString()
+	}
+
 	secret, err := s.bitwardenClient.Secrets().Create(
 		plan.Key.ValueString(),
-		plan.Value.ValueString(),
+		value,
 		plan.Note.ValueString(),
 		s.organizationId,
 		[]string{plan.ProjectID.ValueString()},
@@ -161,13 +185,18 @@ func (s *secretResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	plan.ID = types.StringValue(secret.ID)
-	plan.OrganizationID = types.StringValue(secret.OrganizationID)
-	plan.CreationDate = types.StringValue(secret.CreationDate)
-	plan.RevisionDate = types.StringValue(secret.RevisionDate)
+	var state secretResourceModel
+	state.ID = types.StringValue(secret.ID)
+	state.Key = types.StringValue(secret.Key)
+	state.Value = types.StringValue(secret.Value)
+	state.Note = types.StringValue(secret.Note)
+	state.ProjectID = types.StringValue(*secret.ProjectID)
+	state.OrganizationID = types.StringValue(secret.OrganizationID)
+	state.CreationDate = types.StringValue(secret.CreationDate)
+	state.RevisionDate = types.StringValue(secret.RevisionDate)
 
 	// Set state to fully populated data
-	diags = resp.State.Set(ctx, plan)
+	diags = resp.State.Set(ctx, state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -274,13 +303,16 @@ func (s *secretResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	plan.ID = types.StringValue(secret.ID)
-	plan.OrganizationID = types.StringValue(secret.OrganizationID)
-	plan.CreationDate = types.StringValue(secret.CreationDate)
-	plan.RevisionDate = types.StringValue(secret.RevisionDate)
+	state.Key = types.StringValue(secret.Key)
+	state.Value = types.StringValue(secret.Value)
+	state.Note = types.StringValue(secret.Note)
+	state.ProjectID = types.StringValue(*secret.ProjectID)
+	state.OrganizationID = types.StringValue(secret.OrganizationID)
+	state.CreationDate = types.StringValue(secret.CreationDate)
+	state.RevisionDate = types.StringValue(secret.RevisionDate)
 
 	// Set state to fully populated data
-	diags = resp.State.Set(ctx, plan)
+	diags = resp.State.Set(ctx, state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -322,4 +354,15 @@ func (s *secretResource) Delete(ctx context.Context, req resource.DeleteRequest,
 func (s *secretResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import ID and save to id attribute
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func createSecretValue() string {
+	chars := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	seed := rand.New(rand.NewSource(time.Now().UnixNano()))
+	b := make([]byte, 8)
+	for i := range b {
+		b[i] = chars[seed.Intn(len(chars))]
+	}
+
+	return string(b)
 }

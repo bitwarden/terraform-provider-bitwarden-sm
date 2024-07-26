@@ -18,12 +18,12 @@ Fetches the content of a secret.
 ### Required
 
 - `key` (String) The key of the secret.
-- `value` (String, Sensitive) The value of the secret.
 
 ### Optional
 
 - `note` (String) The note of the secret.
 - `project_id` (String) Project id of the secret.
+- `value` (String, Sensitive) The value of the secret.
 
 ### Read-Only
 
