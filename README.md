@@ -6,7 +6,7 @@ The purpose of this Terraform Provider is to streamline the process of using Bit
 
 ## Requirements
 
-- [Terraform](https://developer.hashicorp.com/terraform/downloads) >= 1.4
+- [Terraform](https://developer.hashicorp.com/terraform/downloads) >= 1.5
 - [Go](https://golang.org/doc/install) >= 1.22.5
 
 ## Building The Provider
@@ -69,6 +69,19 @@ The file [`provider_test.go`](./internal/provider/provider_test.go) uses this fi
 
 If everything is provided, one can execute all acceptance tests with `make`:
 
+### Testing with `terraform` CLI
+
 ```shell
 make testacc
+```
+
+### Testing with `tofu` CLI
+
+In order to run acceptance tests using the [OpenTofu](https://opentofu.org/) engine instead of Terraform, one needs to install the CLI first:
+https://opentofu.org/.
+
+Thereafter, the [`GNUmakefile`](./GNUmakefile) contains a specific command to run the acceptance test suite using the `tofu` CLI:
+
+```shell
+make testacc_tofu
 ```
