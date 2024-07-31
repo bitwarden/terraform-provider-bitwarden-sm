@@ -52,8 +52,8 @@ jobs:
             (echo; echo "Unexpected difference in directories [/examples, /docs] after code generation. Run 'go generate ./...' command and commit."; exit 1)
 
   # Run acceptance tests in a matrix with Terraform CLI versions
-  acctest:
-    name: Terraform Provider Acceptance Tests
+  acctest_tf:
+    name: "Terraform: Provider Acceptance Tests"
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -97,8 +97,8 @@ jobs:
 
   # Run acceptance tests with OpenTofu CLI versions
   acctest_tofu:
-    name: Provider Acceptance Tests with OpenTofu
-    needs: acctest
+    name: "OpenTofu: Provider Acceptance Tests"
+    needs: acctest_tf
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
