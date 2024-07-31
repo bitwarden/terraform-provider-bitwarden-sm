@@ -22,13 +22,10 @@ Fetches a list of projects accessible by the machine account.
 <a id="nestedatt--projects"></a>
 ### Nested Schema for `projects`
 
-Required:
-
-- `organization_id` (String) String identifier of the organization the projects belongs to.
-
 Read-Only:
 
 - `creation_date` (String) String representation of the creation date of the project.
 - `id` (String) String identifier of the project.
 - `name` (String) String name of the project.
+- `organization_id` (String) String identifier of the organization the projects belongs to.
 - `revision_date` (String) String representation of the revision date of the project.

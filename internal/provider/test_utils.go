@@ -54,23 +54,12 @@ func checkDestroyUnsetAllEnvVars(_ *terraform.State) error {
 }
 
 func unsetAllEnvVars() error {
-	err := os.Unsetenv("BW_API_URL")
-	if err != nil {
-		return err
+	vars := []string{"BW_API_URL", "BW_IDENTITY_API_URL", "BW_ACCESS_TOKEN", "BW_ORGANIZATION_ID"}
+	for _, v := range vars {
+		if err := os.Unsetenv(v); err != nil {
+			return err
+		}
 	}
-	err = os.Unsetenv("BW_IDENTITY_API_URL")
-	if err != nil {
-		return err
-	}
-	err = os.Unsetenv("BW_ACCESS_TOKEN")
-	if err != nil {
-		return err
-	}
-	err = os.Unsetenv("BW_ORGANIZATION_ID")
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 

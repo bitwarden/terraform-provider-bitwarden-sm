@@ -3,12 +3,12 @@
 page_title: "bitwarden-sm Provider"
 subcategory: ""
 description: |-
-  Interact with Bitwarden Secrets Manager.
+  Interacts with Bitwarden Secrets Manager.
 ---
 
 # bitwarden-sm Provider
 
-Interact with Bitwarden Secrets Manager.
+Interacts with Bitwarden Secrets Manager.
 
 ## Example Usage
 
