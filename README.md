@@ -12,8 +12,8 @@ The purpose of this Terraform Provider is to streamline the process of using Bit
 ## Building The Provider
 
 1. Clone the repository
-1. Enter the repository directory
-1. Build the provider using the Go `install` command:
+2. Enter the repository directory
+3. Build the provider using the Go `install` command:
 
 ```shell
 go install .
