@@ -52,8 +52,8 @@ jobs:
             (echo; echo "Unexpected difference in directories [/examples, /docs] after code generation. Run 'go generate ./...' command and commit."; exit 1)
 
   # Run acceptance tests in a matrix with Terraform CLI versions
-  test:
-    name: Terraform Provider Acceptance Tests
+  acctest_tf:
+    name: "Terraform: Provider Acceptance Tests"
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -94,3 +94,45 @@ jobs:
           echo 'BW_STATE_FILE=".bw-state-qa-no-access"' >> .env.local.no.access
       - name: Run acceptance tests
         run: make testacc
+
+  # Run acceptance tests with OpenTofu CLI versions
+  acctest_tofu:
+    name: "OpenTofu: Provider Acceptance Tests"
+    needs: acctest_tf
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      max-parallel: 1
+      fail-fast: false
+      matrix:
+        # list whatever Terraform versions here you would like to support
+        opentofu:
+          - '1.6'
+          - '1.7'
+          - '1.8'
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
+        with:
+          go-version-file: 'go.mod'
+      - uses: opentofu/setup-opentofu@ae80d4ecaab946d8f5ff18397fbf6d0686c6d46a # v1.0.3
+        with:
+          tofu_version: ${{ matrix.opentofu }}
+          tofu_wrapper: false
+      - name: Install dependencies
+        run: go mod download
+      - name: Create bw client configuration file
+        run: |
+          echo 'BW_API_URL="${{ secrets.BW_API_URL }}"' >> .env.local.test
+          echo 'BW_API_URL="${{ secrets.BW_API_URL }}"' >> .env.local.no.access
+          echo 'BW_IDENTITY_API_URL="${{ secrets.BW_IDENTITY_API_URL }}"' >> .env.local.test
+          echo 'BW_IDENTITY_API_URL="${{ secrets.BW_IDENTITY_API_URL }}"' >> .env.local.no.access
+          echo 'BW_ORGANIZATION_ID="${{ secrets.BW_ORGANIZATION_ID_NO_ACCESS }}"' >> .env.local.test
+          echo 'BW_ORGANIZATION_ID="${{ secrets.BW_ORGANIZATION_ID_NO_ACCESS }}"' >> .env.local.no.access
+
+          echo 'BW_ACCESS_TOKEN="${{ secrets.BW_ACCESS_TOKEN }}"' >> .env.local.test
+          echo 'BW_ACCESS_TOKEN="${{ secrets.BW_ACCESS_TOKEN_NO_ACCESS }}"' >> .env.local.no.access
+          echo 'BW_STATE_FILE=".bw-state-qa"' >> .env.local.test
+          echo 'BW_STATE_FILE=".bw-state-qa-no-access"' >> .env.local.no.access
+      - name: Run acceptance tests
+        run: make testacc_tofu
