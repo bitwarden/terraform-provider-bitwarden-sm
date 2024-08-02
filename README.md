@@ -94,6 +94,7 @@ Therefore, create or open the file `~/.terraformrc` and add an entry for our `bi
 provider_installation {
   dev_overrides {
       "registry.terraform.io/bitwarden/bitwarden-sm" = "/Users/user-name/go/bin"
+      "registry.opentofu.org/bitwarden/bitwarden-sm" = "/Users/user-name/go/bin"
   }
 
   # For all other providers, install them directly from their origin provider
