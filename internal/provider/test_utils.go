@@ -78,8 +78,8 @@ func readEnvFile(envFile string) (map[string]string, error) {
 	return envMap, nil
 }
 
-func newBitwardenClient(filePath ...string) (sdk.BitwardenClientInterface, string, error) {
-	envFilePath := resolveFilePath(filePath)
+func newBitwardenClient() (sdk.BitwardenClientInterface, string, error) {
+	envFilePath := resolveFilePath(nil)
 	envMap, err := readEnvFile(envFilePath)
 	if err != nil {
 		return nil, "", err
