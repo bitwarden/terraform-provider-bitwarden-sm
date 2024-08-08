@@ -36,7 +36,7 @@ type listSecretDataSourceModel struct {
 }
 
 func (l *listSecretsDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_secrets"
+	resp.TypeName = req.ProviderTypeName + "_list_secrets"
 }
 
 func (l *listSecretsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {

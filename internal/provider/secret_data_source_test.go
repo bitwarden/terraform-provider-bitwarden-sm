@@ -7,12 +7,12 @@ import (
 	"testing"
 )
 
-func TestAccExpectErrorOnMissingSecretId(t *testing.T) {
+func TestAccDatasourceSecretExpectErrorOnMissingSecretId(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: buildProviderConfigFromEnvFile() + `
+				Config: buildProviderConfigFromEnvFile(t) + `
                        data "bitwarden-sm_secret" "test" {}`,
 				ExpectError: regexp.MustCompile("The argument \"id\" is required, but no definition was found."),
 			},
@@ -20,7 +20,7 @@ func TestAccExpectErrorOnMissingSecretId(t *testing.T) {
 	})
 }
 
-func TestAccVerifySecretData(t *testing.T) {
+func TestAccDatasourceSecretVerifySecretData(t *testing.T) {
 	var secretId, projectId string
 	secretKey := "Test-Secret-" + generateRandomString()
 	secretValue := generateRandomString()
@@ -54,7 +54,7 @@ func TestAccVerifySecretData(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: buildProviderConfigFromEnvFile() + `
+				Config: buildProviderConfigFromEnvFile(t) + `
                             data "bitwarden-sm_secret" "secret" {
                                 id ="` + secretId + `"
                             }`,

@@ -1,5 +1,5 @@
-data "bitwarden-sm_secrets" "secrets" {}
+data "bitwarden-sm_list_secrets" "secrets" {}
 
 output "secrets" {
-  value = data.bitwarden-sm_secrets.secrets
+  value = data.bitwarden-sm_list_secrets.secrets
 }

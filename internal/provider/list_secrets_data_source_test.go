@@ -8,22 +8,22 @@ import (
 	"testing"
 )
 
-func TestAccListZeroSecretsMachineAccountWithNoAccess(t *testing.T) {
+func TestAccDatasourceListSecretsZeroSecretsMachineAccountWithNoAccess(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: buildProviderConfigFromEnvFile("../../.env.local.no.access") + `
-                       data "bitwarden-sm_secrets" "test" {}`,
+				Config: buildProviderConfigFromEnvFile(t, "../../.env.local.no.access") + `
+                       data "bitwarden-sm_list_secrets" "test" {}`,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.bitwarden-sm_secrets.test", "secrets.#", "0"),
+					resource.TestCheckResourceAttr("data.bitwarden-sm_list_secrets.test", "secrets.#", "0"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccListOneSecret(t *testing.T) {
+func TestAccDatasourceListSecretsOneSecret(t *testing.T) {
 	var secretId, projectId string
 	secretKey := "Test-Secret-" + generateRandomString()
 	projectName := "Test-Project-" + generateRandomString()
@@ -48,8 +48,8 @@ func TestAccListOneSecret(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: buildProviderConfigFromEnvFile() + `
-                       data "bitwarden-sm_secrets" "test" {}`,
+				Config: buildProviderConfigFromEnvFile(t) + `
+                       data "bitwarden-sm_list_secrets" "test" {}`,
 				Check: resource.ComposeTestCheckFunc(
 					func(s *terraform.State) error {
 						return testAccCheckIfSecretExistsInOutput(secretId, secretKey)(s)
@@ -71,7 +71,7 @@ func TestAccListOneSecret(t *testing.T) {
 	})
 }
 
-func TestAccListTwoSecrets(t *testing.T) {
+func TestAccDatasourceListSecretsTwoSecrets(t *testing.T) {
 	var secretId1, secretId2, projectId string
 	secretKey1 := "Test-Secret-" + generateRandomString()
 	secretKey2 := "Test-Secret-" + generateRandomString()
@@ -83,28 +83,28 @@ func TestAccListTwoSecrets(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		PreCheck: func() {
-			project, err := bitwardenClient.Projects().Create(organizationId, projectName)
-			if err != nil {
+			project, preCheckErr := bitwardenClient.Projects().Create(organizationId, projectName)
+			if preCheckErr != nil {
 				t.Fatal("Error creating test project for provider validation.")
 			}
 			projectId = project.ID
 
-			secret, err := bitwardenClient.Secrets().Create(secretKey1, "secret", "", organizationId, []string{projectId})
-			if err != nil {
+			secret, preCheckErr := bitwardenClient.Secrets().Create(secretKey1, "secret", "", organizationId, []string{projectId})
+			if preCheckErr != nil {
 				t.Fatal("Error creating test secret for provider validation.")
 			}
 			secretId1 = secret.ID
 
-			secret, err = bitwardenClient.Secrets().Create(secretKey2, "secret", "", organizationId, []string{projectId})
-			if err != nil {
+			secret, preCheckErr = bitwardenClient.Secrets().Create(secretKey2, "secret", "", organizationId, []string{projectId})
+			if preCheckErr != nil {
 				t.Fatal("Error creating test secret for provider validation.")
 			}
 			secretId2 = secret.ID
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: buildProviderConfigFromEnvFile() + `
-                       data "bitwarden-sm_secrets" "test" {}`,
+				Config: buildProviderConfigFromEnvFile(t) + `
+                       data "bitwarden-sm_list_secrets" "test" {}`,
 				Check: resource.ComposeTestCheckFunc(
 					func(s *terraform.State) error {
 						return testAccCheckIfSecretExistsInOutput(secretId1, secretKey1)(s)
@@ -132,7 +132,7 @@ func TestAccListTwoSecrets(t *testing.T) {
 func testAccCheckIfSecretExistsInOutput(secretId, secretKey string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// retrieve the resource by name from state
-		rs, ok := s.RootModule().Resources["data.bitwarden-sm_secrets.test"]
+		rs, ok := s.RootModule().Resources["data.bitwarden-sm_list_secrets.test"]
 		if !ok {
 			return fmt.Errorf("not found: %s", "data.bitwarden-sm_secrets.test")
 		}

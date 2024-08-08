@@ -69,7 +69,7 @@ func (s *secretDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 				Computed:    true,
 			},
 			"organization_id": schema.StringAttribute{
-				Description: "The organization id of the secret.",
+				Description: "Organization id of the secret.",
 				Computed:    true,
 			},
 			"creation_date": schema.StringAttribute{

@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestAccExpectErrorOnMissingApiUrlInProviderConfigString(t *testing.T) {
+func TestAccProviderExpectErrorOnMissingApiUrlInProviderConfigString(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		PreCheck:                 preCheckUnsetAllEnvVars,
@@ -26,7 +26,7 @@ func TestAccExpectErrorOnMissingApiUrlInProviderConfigString(t *testing.T) {
 	})
 }
 
-func TestAccExpectErrorOnMissingIdentityUrlInProviderConfigString(t *testing.T) {
+func TestAccProviderExpectErrorOnMissingIdentityUrlInProviderConfigString(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		PreCheck:                 preCheckUnsetAllEnvVars,
@@ -45,7 +45,7 @@ func TestAccExpectErrorOnMissingIdentityUrlInProviderConfigString(t *testing.T) 
 	})
 }
 
-func TestAccExpectErrorOnMissingApiAndIdentityUrlInProviderConfigString1(t *testing.T) {
+func TestAccProviderExpectErrorOnMissingApiAndIdentityUrlInProviderConfigString1(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		PreCheck:                 preCheckUnsetAllEnvVars,
@@ -63,7 +63,7 @@ func TestAccExpectErrorOnMissingApiAndIdentityUrlInProviderConfigString1(t *test
 	})
 }
 
-func TestAccExpectErrorOnMissingApiAndIdentityUrlInProviderConfigString2(t *testing.T) {
+func TestAccProviderExpectErrorOnMissingApiAndIdentityUrlInProviderConfigString2(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		PreCheck:                 preCheckUnsetAllEnvVars,
@@ -81,7 +81,7 @@ func TestAccExpectErrorOnMissingApiAndIdentityUrlInProviderConfigString2(t *test
 	})
 }
 
-func TestAccExpectErrorOnMissingAccessTokenInProviderConfigString(t *testing.T) {
+func TestAccProviderExpectErrorOnMissingAccessTokenInProviderConfigString(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		PreCheck:                 preCheckUnsetAllEnvVars,
@@ -100,7 +100,7 @@ func TestAccExpectErrorOnMissingAccessTokenInProviderConfigString(t *testing.T) 
 	})
 }
 
-func TestAccExpectErrorOnMissingOrganizationIdInProviderConfigString(t *testing.T) {
+func TestAccProviderExpectErrorOnMissingOrganizationIdInProviderConfigString(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		PreCheck:                 preCheckUnsetAllEnvVars,
@@ -119,7 +119,7 @@ func TestAccExpectErrorOnMissingOrganizationIdInProviderConfigString(t *testing.
 	})
 }
 
-func TestAccExpectErrorOnMissingApiUrlInEnvVars(t *testing.T) {
+func TestAccProviderExpectErrorOnMissingApiUrlInEnvVars(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		PreCheck: func() {
@@ -148,7 +148,7 @@ func TestAccExpectErrorOnMissingApiUrlInEnvVars(t *testing.T) {
 	})
 }
 
-func TestAccExpectErrorOnMissingIdentityUrlInEnvVars(t *testing.T) {
+func TestAccProviderExpectErrorOnMissingIdentityUrlInEnvVars(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		PreCheck: func() {
@@ -177,7 +177,7 @@ func TestAccExpectErrorOnMissingIdentityUrlInEnvVars(t *testing.T) {
 	})
 }
 
-func TestAccExpectErrorOnMissingApiAndIdentityUrlInEnvVars(t *testing.T) {
+func TestAccProviderExpectErrorOnMissingApiAndIdentityUrlInEnvVars(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		PreCheck: func() {
@@ -202,7 +202,7 @@ func TestAccExpectErrorOnMissingApiAndIdentityUrlInEnvVars(t *testing.T) {
 	})
 }
 
-func TestAccExpectErrorOnMissingAccessTokenInEnvVars(t *testing.T) {
+func TestAccProviderExpectErrorOnMissingAccessTokenInEnvVars(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		PreCheck: func() {
@@ -231,7 +231,7 @@ func TestAccExpectErrorOnMissingAccessTokenInEnvVars(t *testing.T) {
 	})
 }
 
-func TestAccExpectErrorOnMissingOrganizationIdInEnvVars(t *testing.T) {
+func TestAccProviderExpectErrorOnMissingOrganizationIdInEnvVars(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		PreCheck: func() {

@@ -248,7 +248,9 @@ func (p *BitwardenSecretsManagerProvider) Configure(ctx context.Context, req pro
 }
 
 func (p *BitwardenSecretsManagerProvider) Resources(_ context.Context) []func() resource.Resource {
-	return []func() resource.Resource{}
+	return []func() resource.Resource{
+		NewSecretResource,
+	}
 }
 
 func (p *BitwardenSecretsManagerProvider) DataSources(_ context.Context) []func() datasource.DataSource {

@@ -24,7 +24,7 @@ import (
 //    })
 //}
 
-func TestAccListOneProject(t *testing.T) {
+func TestAccDatasourceProjectsListOneProject(t *testing.T) {
 	var projectId string
 	projectName := "Test-Project-" + generateRandomString()
 	bitwardenClient, organizationId, err := newBitwardenClient()
@@ -34,19 +34,19 @@ func TestAccListOneProject(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		PreCheck: func() {
-			project, err := bitwardenClient.Projects().Create(organizationId, projectName)
-			if err != nil {
+			project, preCheckErr := bitwardenClient.Projects().Create(organizationId, projectName)
+			if preCheckErr != nil {
 				t.Fatal("Error creating test project for provider validation.")
 			}
 			projectId = project.ID
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: buildProviderConfigFromEnvFile() + `
+				Config: buildProviderConfigFromEnvFile(t) + `
                        data "bitwarden-sm_projects" "test" {}`,
 				Check: resource.ComposeTestCheckFunc(
 					func(s *terraform.State) error {
-						return verifyIfProjectExistsInOutput(projectId, projectName)(s)
+						return testAccCheckIfProjectExistsInOutput(projectId, projectName)(s)
 					},
 				),
 			},
@@ -61,7 +61,7 @@ func TestAccListOneProject(t *testing.T) {
 	})
 }
 
-func TestAccListTwoProjects(t *testing.T) {
+func TestAccDatasourceProjectsListTwoProject(t *testing.T) {
 	var projectId1, projectId2 string
 	projectName1 := "Test-Project-" + generateRandomString()
 	projectName2 := "Test-Project-" + generateRandomString()
@@ -72,14 +72,14 @@ func TestAccListTwoProjects(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		PreCheck: func() {
-			project, err := bitwardenClient.Projects().Create(organizationId, projectName1)
-			if err != nil {
+			project, preCheckErr := bitwardenClient.Projects().Create(organizationId, projectName1)
+			if preCheckErr != nil {
 				t.Fatal("Error creating test project for provider validation.")
 			}
 			projectId1 = project.ID
 
-			project, err = bitwardenClient.Projects().Create(organizationId, projectName2)
-			if err != nil {
+			project, preCheckErr = bitwardenClient.Projects().Create(organizationId, projectName2)
+			if preCheckErr != nil {
 				t.Fatal("Error creating test project for provider validation.")
 			}
 			projectId2 = project.ID
@@ -87,14 +87,14 @@ func TestAccListTwoProjects(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: buildProviderConfigFromEnvFile() + `
+				Config: buildProviderConfigFromEnvFile(t) + `
                        data "bitwarden-sm_projects" "test" {}`,
 				Check: resource.ComposeTestCheckFunc(
 					func(s *terraform.State) error {
-						return verifyIfProjectExistsInOutput(projectId1, projectName1)(s)
+						return testAccCheckIfProjectExistsInOutput(projectId1, projectName1)(s)
 					},
 					func(s *terraform.State) error {
-						return verifyIfProjectExistsInOutput(projectId2, projectName2)(s)
+						return testAccCheckIfProjectExistsInOutput(projectId2, projectName2)(s)
 					},
 				),
 			},
@@ -109,7 +109,7 @@ func TestAccListTwoProjects(t *testing.T) {
 	})
 }
 
-func verifyIfProjectExistsInOutput(projectId, projectName string) resource.TestCheckFunc {
+func testAccCheckIfProjectExistsInOutput(projectId, projectName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// retrieve the resource by name from state
 		rs, ok := s.RootModule().Resources["data.bitwarden-sm_projects.test"]
