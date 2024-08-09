@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"os"
@@ -68,6 +69,9 @@ func (p *BitwardenSecretsManagerProvider) Schema(_ context.Context, _ provider.S
 				Description: "Organization ID for Bitwarden Secrets Manager endpoints. May also be provided via BW_ORGANIZATION_ID environment variable.",
 				Optional:    true,
 				Sensitive:   true,
+				Validators: []validator.String{
+					stringUUIDValidate(),
+				},
 			},
 		},
 	}

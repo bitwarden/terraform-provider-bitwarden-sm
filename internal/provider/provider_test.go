@@ -7,6 +7,12 @@ import (
 	"testing"
 )
 
+const (
+	validProjectUUID    = "df636133-c709-4a5f-a3dc-da28790657b5"
+	invalidProjectUUID1 = "df636133-c709-4a5f-a3dc-da28790xxxxx"
+	invalidProjectUUID2 = "df636133-c709-4a5f-a3dc-da28790657b"
+)
+
 func TestAccProviderExpectErrorOnMissingApiUrlInProviderConfigString(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -16,7 +22,7 @@ func TestAccProviderExpectErrorOnMissingApiUrlInProviderConfigString(t *testing.
 				Config: `provider "bitwarden-sm" {
                             identity_url = "https://identity.example.com"
                             access_token = "mock_access_token"
-                            organization_id = "mock_org_id"
+                            organization_id = "` + validProjectUUID + `"
                         }
 
                         data "bitwarden-sm_projects" "projects" {}`,
@@ -35,7 +41,7 @@ func TestAccProviderExpectErrorOnMissingIdentityUrlInProviderConfigString(t *tes
 				Config: `provider "bitwarden-sm" {
                             api_url      = "https://api.example.com"
                             access_token = "mock_access_token"
-                            organization_id = "mock_org_id"
+                            organization_id = "` + validProjectUUID + `"
                         }
 
                         data "bitwarden-sm_projects" "projects" {}`,
@@ -53,7 +59,7 @@ func TestAccProviderExpectErrorOnMissingApiAndIdentityUrlInProviderConfigString1
 			{
 				Config: `provider "bitwarden-sm" {
                             access_token = "mock_access_token"
-                            organization_id = "mock_org_id"
+                            organization_id = "` + validProjectUUID + `"
                         }
 
                         data "bitwarden-sm_projects" "projects" {}`,
@@ -71,7 +77,7 @@ func TestAccProviderExpectErrorOnMissingApiAndIdentityUrlInProviderConfigString2
 			{
 				Config: `provider "bitwarden-sm" {
                             access_token = "mock_access_token"
-                            organization_id = "mock_org_id"
+                            organization_id = "` + validProjectUUID + `"
                         }
 
                         data "bitwarden-sm_projects" "projects" {}`,
@@ -90,7 +96,7 @@ func TestAccProviderExpectErrorOnMissingAccessTokenInProviderConfigString(t *tes
 				Config: `provider "bitwarden-sm" {
                             api_url      = "https://api.example.com"
                             identity_url = "https://identity.example.com"
-                            organization_id = "mock_org_id"
+                            organization_id = "` + validProjectUUID + `"
                         }
 
                         data "bitwarden-sm_projects" "projects" {}`,
@@ -119,6 +125,37 @@ func TestAccProviderExpectErrorOnMissingOrganizationIdInProviderConfigString(t *
 	})
 }
 
+func TestAccProviderExpectErrorOnOrganizationIdNotAValidUUID(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		PreCheck:                 preCheckUnsetAllEnvVars,
+		Steps: []resource.TestStep{
+			{
+				Config: `provider "bitwarden-sm" {
+                            api_url         = "https://api.example.com"
+                            identity_url    = "https://identity.example.com"
+                            access_token    = "mock_access_token"
+                            organization_id = "` + invalidProjectUUID1 + `"
+                        }
+
+                        data "bitwarden-sm_projects" "projects" {}`,
+				ExpectError: regexp.MustCompile("string attribute not a valid UUID"),
+			},
+			{
+				Config: `provider "bitwarden-sm" {
+                            api_url         = "https://api.example.com"
+                            identity_url    = "https://identity.example.com"
+                            access_token    = "mock_access_token"
+                            organization_id = "` + invalidProjectUUID2 + `"
+                        }
+
+                        data "bitwarden-sm_projects" "projects" {}`,
+				ExpectError: regexp.MustCompile("string attribute not a valid UUID"),
+			},
+		},
+	})
+}
+
 func TestAccProviderExpectErrorOnMissingApiUrlInEnvVars(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -133,7 +170,7 @@ func TestAccProviderExpectErrorOnMissingApiUrlInEnvVars(t *testing.T) {
 			if err != nil {
 				t.Fatal("Setting BW_ACCESS_TOKEN in acceptance tests failed")
 			}
-			err = os.Setenv("BW_ORGANIZATION_ID", "mock_access_token")
+			err = os.Setenv("BW_ORGANIZATION_ID", validProjectUUID)
 			if err != nil {
 				t.Fatal("Setting BW_ORGANIZATION_ID in acceptance tests failed")
 			}
@@ -162,7 +199,7 @@ func TestAccProviderExpectErrorOnMissingIdentityUrlInEnvVars(t *testing.T) {
 			if err != nil {
 				t.Fatal("Setting BW_ACCESS_TOKEN in acceptance tests failed")
 			}
-			err = os.Setenv("BW_ORGANIZATION_ID", "mock_access_token")
+			err = os.Setenv("BW_ORGANIZATION_ID", validProjectUUID)
 			if err != nil {
 				t.Fatal("Setting BW_ORGANIZATION_ID in acceptance tests failed")
 			}
@@ -187,7 +224,7 @@ func TestAccProviderExpectErrorOnMissingApiAndIdentityUrlInEnvVars(t *testing.T)
 			if err != nil {
 				t.Fatal("Setting BW_ACCESS_TOKEN in acceptance tests failed")
 			}
-			err = os.Setenv("BW_ORGANIZATION_ID", "mock_access_token")
+			err = os.Setenv("BW_ORGANIZATION_ID", validProjectUUID)
 			if err != nil {
 				t.Fatal("Setting BW_ORGANIZATION_ID in acceptance tests failed")
 			}
@@ -216,7 +253,7 @@ func TestAccProviderExpectErrorOnMissingAccessTokenInEnvVars(t *testing.T) {
 			if err != nil {
 				t.Fatal("Setting BW_IDENTITY_API_URL in acceptance tests failed")
 			}
-			err = os.Setenv("BW_ORGANIZATION_ID", "mock_access_token")
+			err = os.Setenv("BW_ORGANIZATION_ID", validProjectUUID)
 			if err != nil {
 				t.Fatal("Setting BW_ORGANIZATION_ID in acceptance tests failed")
 			}
@@ -257,5 +294,18 @@ func TestAccProviderExpectErrorOnMissingOrganizationIdInEnvVars(t *testing.T) {
 			},
 		},
 		CheckDestroy: checkDestroyUnsetAllEnvVars,
+	})
+}
+
+func TestAccProviderConfigurationValid(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		PreCheck:                 preCheckUnsetAllEnvVars,
+		Steps: []resource.TestStep{
+			{
+				Config: buildProviderConfigFromEnvFile(t) + `
+                        data "bitwarden-sm_projects" "projects" {}`,
+			},
+		},
 	})
 }
