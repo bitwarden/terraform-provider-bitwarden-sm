@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/bitwarden/sdk-go"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
@@ -50,6 +51,9 @@ func (s *secretDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 			"id": schema.StringAttribute{
 				Description: "The id of the secret.",
 				Required:    true,
+				Validators: []validator.String{
+					stringUUIDValidate(),
+				},
 			},
 			"key": schema.StringAttribute{
 				Description: "The key of the secret.",

@@ -7,6 +7,11 @@ import (
 	"testing"
 )
 
+const (
+	invalidSecretUUID1 = "df636133-c709-4a5f-a3dc-da28790xxxxx"
+	invalidSecretUUID2 = "df636133-c709-4a5f-a3dc-da28790657b"
+)
+
 func TestAccDatasourceSecretExpectErrorOnMissingSecretId(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -14,7 +19,29 @@ func TestAccDatasourceSecretExpectErrorOnMissingSecretId(t *testing.T) {
 			{
 				Config: buildProviderConfigFromEnvFile(t) + `
                        data "bitwarden-sm_secret" "test" {}`,
-				ExpectError: regexp.MustCompile("The argument \"id\" is required, but no definition was found."),
+				ExpectError: regexp.MustCompile("The argument \"id\" is required, but no definition was found"),
+			},
+		},
+	})
+}
+
+func TestAccDatasourceSecretExpectErrorOnInvalidSecretId(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: buildProviderConfigFromEnvFile(t) + `
+                        data "bitwarden-sm_secret" "test" {
+                            id = "` + invalidSecretUUID1 + `"
+                        }`,
+				ExpectError: regexp.MustCompile("string attribute not a valid UUID"),
+			},
+			{
+				Config: buildProviderConfigFromEnvFile(t) + `
+                        data "bitwarden-sm_secret" "test" {
+                            id = "` + invalidSecretUUID2 + `"
+                        }`,
+				ExpectError: regexp.MustCompile("string attribute not a valid UUID"),
 			},
 		},
 	})
