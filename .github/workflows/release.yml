@@ -1,0 +1,136 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-pre"
+
+jobs:
+  check-run:
+    name: Check PR run
+    uses: bitwarden/gh-actions/.github/workflows/check-run.yml@main
+
+  build-artifact:
+    name: Build and verify artifact
+    runs-on: ${{ matrix.runner }}
+    needs: check-run
+    outputs:
+      module_name: ${{ steps.prepare-release.outputs.module_name }}
+      version: ${{ steps.prepare-release.outputs.version }}
+    strategy:
+      matrix:
+        os: [ubuntu-24.04, darwin]
+        arch: [amd64, arm64]
+        include:
+          - os: ubuntu-24.04
+            arch: amd64
+            runner: ubuntu-24.04
+            build_target: build-linux-amd64
+            verify_target: verify-binary-linux
+            dependencies: musl-tools
+#          - os: ubuntu-24.04
+#            arch: arm64
+#            runner: ubuntu-24.04 # This should be the arm runner to enable native compilation
+#            build_target: build-linux-arm64
+#            verify-target: verify-binary-linux
+#            dependencies: gcc-aarch64-linux-gnu musl musl-dev musl-tools #This is not enough to enable cross-compilation
+          - os: darwin
+            arch: amd64
+            runner: macos-14
+            build_target: build-darwin-amd64
+            verify_target: verify-binary-darwin-amd64
+          - os: darwin
+            arch: arm64
+            runner: macos-14
+            build_target: build-darwin-arm64
+            verify_target: verify-binary-darwin-arm64
+        exclude:
+          - os: ubuntu-24.04 # We exclude this until we get feedback about large ARM runners
+            arch: arm64
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+
+#      - name: Import GPG key
+#        uses: crazy-max/ghaction-import-gpg@01dd5d3ca463c7f10f7f4f7b4f177225ac661ee4 # v6.1.0
+#        id: import_gpg
+#        with:
+#          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+#          passphrase: ${{ secrets.PASSPHRASE }}
+
+      - name: Install dependencies (Linux only)
+        if: matrix.os == 'ubuntu-24.04'
+        run: sudo apt update && sudo apt install -y ${{ matrix.dependencies }}
+
+      - name: Install Go dependencies
+        run: go mod tidy
+
+      - name: Build binary
+        run: make ${{ matrix.build_target }} BINARY_VERSION="_${{ github.ref_name }}"
+
+      - name: Verify binary
+        run: make ${{ matrix.verify_target }} BINARY_VERSION="_${{ github.ref_name }}"
+
+      - name: Prepare release artifacts
+        id: prepare-release
+        run: |
+          MODULE_NAME=$(grep "^module" go.mod | awk -F'/' '{print $NF}')
+          VERSION=$(echo ${{ github.ref_name }} | sed 's/^v//')
+          BINARY="${MODULE_NAME}_v${VERSION}"
+          ARCHIVE="${MODULE_NAME}_${VERSION}_${{ matrix.os }}_${{ matrix.arch }}.zip"
+
+          # Create ZIP archive
+          zip ${ARCHIVE} ${BINARY}
+
+          echo "module_name=${MODULE_NAME}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+          echo "module_name=${MODULE_NAME}" >> "$GITHUB_ENV"
+          echo "version=${VERSION}" >> "$GITHUB_ENV"
+          echo "archive=${ARCHIVE}" >> "$GITHUB_ENV"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
+        with:
+          name: ${{ env.module_name }}_${{ env.version }}_${{ matrix.os }}_${{ matrix.arch }}
+          retention-days: 5
+          path: |
+            ${{ env.archive }}
+
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-24.04
+    needs: build-artifact
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Download ZIP files
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        with:
+          pattern: ${{ needs.build-artifact.outputs.module_name }}_${{ needs.build-artifact.outputs.version }}_*
+          path: ./release
+
+      - name: Generate SHA256SUMS
+        run: |
+          cd release
+          find . -type f -name "*.zip" -exec mv {} . \;
+          shasum -a 256 *.zip > ${{ needs.build-artifact.outputs.module_name }}_${{ needs.build-artifact.outputs.version }}_SHA256SUMS
+
+      - name: Sign SHA256SUMS
+        run: |
+          cd release
+          gpg --detach-sign ${{ needs.build-artifact.outputs.module_name }}_${{ needs.build-artifact.outputs.version }}_SHA256SUMS
+
+      - name: Release
+        uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191 # v2.0.8
+        with:
+          files: |
+            release/*.zip
+            terraform-registry-manifest.json
+            release/${{ needs.build-artifact.outputs.module_name }}_${{ needs.build-artifact.outputs.version }}_SHA256SUMS
+            release/${{ needs.build-artifact.outputs.module_name }}_${{ needs.build-artifact.outputs.version }}_SHA256SUMS.sig
