@@ -16,7 +16,7 @@ func (v stringUUIDValidator) Description(_ context.Context) string {
 }
 
 func (v stringUUIDValidator) MarkdownDescription(_ context.Context) string {
-	return "the string parameter must be in a valid UUID as defined here: [func Validate](https://pkg.go.dev/github.com/google/uuid#Validate)"
+	return "the string parameter must be a valid UUID as defined here: [func Validate](https://pkg.go.dev/github.com/google/uuid#Validate)"
 }
 
 func (v stringUUIDValidator) ValidateString(_ context.Context, req validator.StringRequest, resp *validator.StringResponse) {
