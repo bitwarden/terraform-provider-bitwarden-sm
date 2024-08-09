@@ -1,0 +1,161 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+env:
+  CGO_ENABLED: 1
+
+jobs:
+  check-run:
+    name: Check PR run
+    uses: bitwarden/gh-actions/.github/workflows/check-run.yml@main
+
+  linux-x86_64:
+    runs-on: ubuntu-24.04
+    needs: check-run
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+
+#      - name: Import GPG key
+#        uses: crazy-max/ghaction-import-gpg@01dd5d3ca463c7f10f7f4f7b4f177225ac661ee4 # v6.1.0
+#        id: import_gpg
+#        with:
+#          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+#          passphrase: ${{ secrets.PASSPHRASE }}
+#          echo 'GPG_FINGERPRINT=${{ steps.import_gpg.outputs.fingerprint }}' > .release-env
+
+      - name: Install build dependencies
+        run: sudo apt update && sudo apt install musl-tools -y
+
+      - name: Extract provider name from go.mod
+        run: |
+          NAME=$(grep "^module" go.mod | awk -F'/' '{print $NF}')
+          echo "NAME=${NAME}" >> $GITHUB_ENV
+
+      - name: Build statically linked binary
+        env:
+          CGO_LDFLAGS: '-static -Wl,-unresolved-symbols=ignore-all'
+          CC: musl-gcc
+          GOOS: linux
+          GOARCH: amd64
+        run: |
+              go build -v -o terraform-provider-${{ env.NAME }}_${{ env.GITHUB_REF_NAME }}
+
+      - name: Verify binary
+        run: file terraform-provider-${{ env.NAME }}_${{ env.GITHUB_REF_NAME }}
+
+  linux-aarch64:
+    runs-on: ubuntu-24.04
+    needs: check-run
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+
+#      - name: Import GPG key
+#        uses: crazy-max/ghaction-import-gpg@01dd5d3ca463c7f10f7f4f7b4f177225ac661ee4 # v6.1.0
+#        id: import_gpg
+#        with:
+#          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+#          passphrase: ${{ secrets.PASSPHRASE }}
+
+      - name: Install build dependencies
+        run: sudo apt update && sudo apt install gcc-aarch64-linux-gnu musl musl-dev musl-tools -y
+
+      - name: Extract provider name from go.mod
+        run: |
+          NAME=$(grep "^module" go.mod | awk -F'/' '{print $NF}')
+          echo "NAME=${NAME}" >> $GITHUB_ENV
+
+      - name: Build statically linked binary
+        env:
+          CGO_LDFLAGS: '-static -Wl,-unresolved-symbols=ignore-all'
+          CC: musl-gcc
+          GOOS: linux
+          GOARCH: arm64
+        run: |
+          go build -o terraform-provider-${{ env.NAME }}_${{ env.GITHUB_REF_NAME }}
+
+      - name: Verify binary
+        run: file terraform-provider-${{ env.NAME }}_${{ env.GITHUB_REF_NAME }}
+
+  darwin-x86_64:
+    runs-on: macos-14
+    needs: check-run
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+
+#      - name: Import GPG key
+#        uses: crazy-max/ghaction-import-gpg@01dd5d3ca463c7f10f7f4f7b4f177225ac661ee4 # v6.1.0
+#        id: import_gpg
+#        with:
+#          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+#          passphrase: ${{ secrets.PASSPHRASE }}
+
+      - name: Extract provider name from go.mod
+        run: |
+          NAME=$(grep "^module" go.mod | awk -F'/' '{print $NF}')
+          echo "NAME=${NAME}" >> $GITHUB_ENV
+
+      - name: Build amd64 binary
+        env:
+          GOOS: darwin
+          GOARCH: amd64
+        run: |
+          go build -o terraform-provider-${{ env.NAME }}_${{ env.GITHUB_REF_NAME }}
+
+      - name: Verify binary
+        run: |
+          file terraform-provider-${{ env.NAME }}_${{ env.GITHUB_REF_NAME }}
+          otool -L ./terraform-provider-${{ env.NAME }}_${{ env.GITHUB_REF_NAME }}
+
+  darwin-aarch64:
+    runs-on: macos-14
+    needs: check-run
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+
+#      - name: Import GPG key
+#        uses: crazy-max/ghaction-import-gpg@01dd5d3ca463c7f10f7f4f7b4f177225ac661ee4 # v6.1.0
+#        id: import_gpg
+#        with:
+#          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+#          passphrase: ${{ secrets.PASSPHRASE }}
+
+      - name: Extract provider name from go.mod
+        run: |
+          NAME=$(grep "^module" go.mod | awk -F'/' '{print $NF}')
+          echo "NAME=${NAME}" >> $GITHUB_ENV
+
+      - name: Build statically linked binary
+        env:
+          GOOS: darwin
+          GOARCH: arm64
+        run: |
+          go build -o terraform-provider-${{ env.NAME }}_${{ env.GITHUB_REF_NAME }}
+
+      - name: Verify binary
+        run: |
+          file terraform-provider-${{ env.NAME }}_${{ env.GITHUB_REF_NAME }}
+          otool -L ./terraform-provider-${{ env.NAME }}_${{ env.GITHUB_REF_NAME }}

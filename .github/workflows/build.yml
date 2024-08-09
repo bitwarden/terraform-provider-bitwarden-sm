@@ -1,0 +1,48 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - "main"
+      - "TR6_adding_continuous_registry_deployment"
+  pull_request:
+
+env:
+  CGO_ENABLED: 1
+  CGO_LDFLAGS: '-static -Wl,-unresolved-symbols=ignore-all'
+  CC: musl-gcc
+
+jobs:
+  check-run:
+    name: Check PR run
+    uses: bitwarden/gh-actions/.github/workflows/check-run.yml@main
+
+  build:
+    name: Build
+    runs-on: ubuntu-24.04
+    needs: check-run
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
+        with:
+          go-version-file: 'go.mod'
+
+      - name: Install Go dependencies
+        run: go mod tidy
+
+      - name: Extract provider name from go.mod
+        run: |
+          NAME=$(grep "^module" go.mod | awk -F'/' '{print $NF}')
+          echo "NAME=${NAME}" >> $GITHUB_ENV
+
+      - name: Install build dependencies
+        run: sudo apt update && sudo apt install musl-tools -y
+
+      - name: Build binary
+        run: |
+          sudo apt update && sudo apt install musl-tools -y
+          go build -v -o terraform-provider-${{ env.NAME }} .
+
+      - name: Verify binary
+        run: file terraform-provider-${{ env.NAME }}

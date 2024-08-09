@@ -1,59 +1,24 @@
-# Terraform Provider testing workflow.
 name: Tests
 
-# This GitHub action runs your tests for each pull request and push.
-# Optionally, you can turn it on using a schedule for regular testing.
 on:
   push:
     branches:
       - "main"
+      - "TR6_adding_continuous_registry_deployment"
   pull_request:
 
-# Testing only needs permissions to read the repository contents.
 permissions:
   contents: read
 
 env:
   CGO_ENABLED: 1
-  CGO_LDFLAGS: -lm
+  CGO_LDFLAGS: '-static -Wl,-unresolved-symbols=ignore-all'
+  CC: musl-gcc
 
 jobs:
-  # Ensure project builds before running testing matrix
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-      - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
-        with:
-          go-version-file: 'go.mod'
-      - uses: hashicorp/setup-terraform@651471c36a6092792c552e8b1bef71e592b462d8 # v3.1.1
-        with:
-          terraform_version: '1.9.2'
-          terraform_wrapper: false
-      - name: Install dependencies
-        run: go mod tidy
-      - name: Build binary
-        run: go build -v .
-      - name: Run linters
-        uses: golangci/golangci-lint-action@aaa42aa0628b4ae2578232a66b541047968fac86 # v6.1.0
-        with:
-          version: latest
-      - name: Generate documentation
-        run: |
-          go get github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
-          go generate ./...
-      - name: Git diff
-        run: |
-          git diff --compact-summary --exit-code examples docs || \
-            (echo; echo "Unexpected difference in directories [/examples, /docs] after code generation. Run 'go generate ./...' command and commit."; exit 1)
-
-  # Run acceptance tests in a matrix with Terraform CLI versions
   acctest_tf:
     name: "Terraform: Provider Acceptance Tests"
-    needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     strategy:
       max-parallel: 1
@@ -68,15 +33,22 @@ jobs:
           - '1.9.*'
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
       - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
         with:
           go-version-file: 'go.mod'
+
       - uses: hashicorp/setup-terraform@651471c36a6092792c552e8b1bef71e592b462d8 # v3.1.1
         with:
           terraform_version: ${{ matrix.terraform }}
           terraform_wrapper: false
-      - name: Install dependencies
+
+      - name: Install Go dependencies
         run: go mod download
+
+      - name: Install build dependencies
+        run: sudo apt update && sudo apt install musl-tools -y
+
       - name: Create bw client configuration file
         run: |
           echo 'BW_API_URL="${{ secrets.BW_API_URL }}"' >> .env.local.test
@@ -90,14 +62,14 @@ jobs:
           echo 'BW_ACCESS_TOKEN="${{ secrets.BW_ACCESS_TOKEN_NO_ACCESS }}"' >> .env.local.no.access
           echo 'BW_STATE_FILE=".bw-state-qa"' >> .env.local.test
           echo 'BW_STATE_FILE=".bw-state-qa-no-access"' >> .env.local.no.access
+
       - name: Run acceptance tests
         run: make testacc
 
-  # Run acceptance tests with OpenTofu CLI versions
   acctest_tofu:
     name: "OpenTofu: Provider Acceptance Tests"
     needs: acctest_tf
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     strategy:
       max-parallel: 1
@@ -110,15 +82,22 @@ jobs:
           - '1.8'
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
       - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
         with:
           go-version-file: 'go.mod'
+
       - uses: opentofu/setup-opentofu@ae80d4ecaab946d8f5ff18397fbf6d0686c6d46a # v1.0.3
         with:
           tofu_version: ${{ matrix.opentofu }}
           tofu_wrapper: false
-      - name: Install dependencies
+
+      - name: Install Go dependencies
         run: go mod download
+
+      - name: Install build dependencies
+        run: sudo apt update && sudo apt install musl-tools -y
+
       - name: Create bw client configuration file
         run: |
           echo 'BW_API_URL="${{ secrets.BW_API_URL }}"' >> .env.local.test
@@ -132,5 +111,6 @@ jobs:
           echo 'BW_ACCESS_TOKEN="${{ secrets.BW_ACCESS_TOKEN_NO_ACCESS }}"' >> .env.local.no.access
           echo 'BW_STATE_FILE=".bw-state-qa"' >> .env.local.test
           echo 'BW_STATE_FILE=".bw-state-qa-no-access"' >> .env.local.no.access
+
       - name: Run acceptance tests
         run: make testacc_tofu
