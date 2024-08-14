@@ -46,42 +46,49 @@ func (s *secretDataSource) Metadata(_ context.Context, req datasource.MetadataRe
 
 func (s *secretDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Fetches the content of a secret.",
+		Description:         "The secret data source fetches a particular secret from Bitwarden Secrets Manager based on a given ID.",
+		MarkdownDescription: "The `secret` data source fetches a particular secret from Bitwarden Secrets Manager based on a given `ID`.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				Description: "The id of the secret.",
-				Required:    true,
+				Description:         "String representation of the ID of the secret inside Bitwarden Secrets Manager.",
+				MarkdownDescription: "String representation of the `ID` of the secret inside Bitwarden Secrets Manager.",
+				Required:            true,
 				Validators: []validator.String{
 					stringUUIDValidate(),
 				},
 			},
 			"key": schema.StringAttribute{
-				Description: "The key of the secret.",
-				Computed:    true,
+				Description:         "String representation of the key of the secret. Inside Bitwarden Secrets Manager this is called name.",
+				MarkdownDescription: "String representation of the `key` of the secret. Inside Bitwarden Secrets Manager this is called name.",
+				Computed:            true,
 			},
 			"value": schema.StringAttribute{
-				Description: "The value of the secret.",
-				Computed:    true,
-				Sensitive:   true,
+				Description:         "String representation of the value of the secret inside Bitwarden Secrets Manager. This attribute is sensitive.",
+				MarkdownDescription: "String representation of the `value` of the secret inside Bitwarden Secrets Manager. This attribute is sensitive.",
+				Computed:            true,
+				Sensitive:           true,
 			},
 			"note": schema.StringAttribute{
-				Description: "The note of the secret.",
-				Computed:    true,
+				Description:         "String representation of the note of the secret inside Bitwarden Secrets Manager.",
+				MarkdownDescription: "String representation of the `note` of the secret inside Bitwarden Secrets Manager.",
+				Computed:            true,
 			},
 			"project_id": schema.StringAttribute{
-				Description: "The project id of the secret.",
-				Computed:    true,
+				Description:         "String representation of the ID of the project to which the secrets belongs to. If the used machine account has no read access to this project, access will not be granted.",
+				MarkdownDescription: "String representation of the `ID` of the project to which the secret belongs to. If the used machine account has no read access to this project, access will not be granted.",
+				Computed:            true,
 			},
 			"organization_id": schema.StringAttribute{
-				Description: "Organization id of the secret.",
-				Computed:    true,
+				Description:         "String representation of the ID of the organization to which the secrets belongs to.",
+				MarkdownDescription: "String representation of the `ID` of the organization to which the secret belongs to.",
+				Computed:            true,
 			},
 			"creation_date": schema.StringAttribute{
-				Description: "The creation date of the secret.",
+				Description: "String representation of the creation date of the secret.",
 				Computed:    true,
 			},
 			"revision_date": schema.StringAttribute{
-				Description: "The revision date of the secret.",
+				Description: "String representation of the revision date of the secret.",
 				Computed:    true,
 			},
 		},

@@ -50,25 +50,47 @@ type BitwardenSecretsManagerProviderDataStruct struct {
 
 func (p *BitwardenSecretsManagerProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Interacts with Bitwarden Secrets Manager.",
+		Description: "This Terraform provider interacts with Bitwarden Secrets Manager to manage Secrets and Projects.",
+		MarkdownDescription: "This Terraform provider interacts with [**Bitwarden Secrets Manager**](https://bitwarden.com/products/secrets-manager/) " +
+			"to manage `Secrets` and `Projects`.",
 		Attributes: map[string]schema.Attribute{
 			"api_url": schema.StringAttribute{
-				Description: "URI for Bitwarden Secrets Manager API endpoint. May also be provided via BW_API_URL environment variable.",
-				Optional:    true,
+				Description: "URI for the Bitwarden Secrets Manager API endpoint. " +
+					"This configuration value is optional because it can also be provided via BW_API_URL environment variable. " +
+					"However, it **must be provided** in one of these two ways.",
+				MarkdownDescription: "URI for the **Bitwarden Secrets Manager** `API` endpoint. " +
+					"This configuration value is _**optional**_ because it can also be provided via `BW_API_URL` environment variable.  " +
+					"However, it **must be provided** in one of these two ways.",
+				Optional: true,
 			},
 			"identity_url": schema.StringAttribute{
-				Description: "URI for Bitwarden Secrets Manager IDENTITY endpoint. May also be provided via BW_IDENTITY_API_URL environment variable.",
-				Optional:    true,
+				Description: "URI for the Bitwarden Secrets Manager IDENTITY endpoint. " +
+					"This configuration value is optional because it can also be provided via BW_IDENTITY_API_URL environment variable. " +
+					"However, it **must be provided** in one of these two ways.",
+				MarkdownDescription: "URI for the **Bitwarden Secrets Manager** `IDENTITY` endpoint. " +
+					"This configuration value is _**optional**_ because it can also be provided via `BW_IDENTITY_API_URL` environment variable. " +
+					"However, it **must be provided** in one of these two ways.",
+				Optional: true,
 			},
 			"access_token": schema.StringAttribute{
-				Description: "Access token for Bitwarden Secrets Manager endpoints. May also be provided via BW_ACCESS_TOKEN environment variable.",
-				Optional:    true,
-				Sensitive:   true,
+				Description: "Access Token of the used Machine Account for Bitwarden Secrets Manager." +
+					"This configuration value is optional because it can also be provided via BW_ACCESS_TOKEN environment variable. " +
+					"However, it **must be provided** in one of these two ways.",
+				MarkdownDescription: "`Access Token` of the used Machine Account for Bitwarden Secrets Manager. " +
+					"This configuration value is _**optional**_ because it can also be provided via `BW_ACCESS_TOKEN` environment variable. " +
+					"However, it **must be provided** in one of these two ways.",
+				Optional:  true,
+				Sensitive: true,
 			},
 			"organization_id": schema.StringAttribute{
-				Description: "Organization ID for Bitwarden Secrets Manager endpoints. May also be provided via BW_ORGANIZATION_ID environment variable.",
-				Optional:    true,
-				Sensitive:   true,
+				Description: "The ID of your Organization in Bitwarden Secrets Manager endpoints. " +
+					"This configuration value is optional because it can also be provided via BW_ORGANIZATION_ID environment variable. " +
+					"However, it **must be provided** in one of these two ways.",
+				MarkdownDescription: "The `ID` of your Organization in Bitwarden Secrets Manager endpoints. " +
+					"This configuration value is _**optional**_ because it can also be provided via `BW_ORGANIZATION_ID` environment variable. " +
+					"However, it **must be provided** in one of these two ways.",
+				Optional:  true,
+				Sensitive: true,
 				Validators: []validator.String{
 					stringUUIDValidate(),
 				},

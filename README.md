@@ -1,6 +1,6 @@
 # Terraform Provider -  Bitwarden Secrets Manager
 
-_This Terraform provider is built on the [Terraform Plugin Framework](https://github.com/hashicorp/terraform-plugin-framework)._
+_This Terraform provider is built with the [Terraform Plugin Framework](https://github.com/hashicorp/terraform-plugin-framework)._
 
 The purpose of this Terraform Provider is to streamline the process of using Bitwarden Secrets Manager within Terraform and OpenTofu, making it more secure and efficient.
 
@@ -9,7 +9,11 @@ The purpose of this Terraform Provider is to streamline the process of using Bit
 - [Terraform](https://developer.hashicorp.com/terraform/downloads) >= 1.5
 - [Go](https://golang.org/doc/install) >= 1.22.5
 
-## Building The Provider
+## Developing the Provider
+
+If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (see [Requirements](#requirements) above).
+
+### Building The Provider
 
 1. Clone the repository
 2. Enter the repository directory
@@ -18,129 +22,12 @@ The purpose of this Terraform Provider is to streamline the process of using Bit
 ```shell
 go install .
 ```
-
-## Adding Dependencies
-
-This provider uses [Go modules](https://github.com/golang/go/wiki/Modules).
-Please see the Go documentation for the most up-to-date information about using Go modules.
-
-To add a new dependency `github.com/author/dependency` to your Terraform provider:
-
-```shell
-go get github.com/author/dependency
-go mod tidy
-```
-
-Then commit the changes to `go.mod` and `go.sum`.
-
-## Using the provider
-
-### Dynamic Secrets
-
-Dynamic Secrets are secrets that can be rotated or updated in the Bitwarden Secrets Manager.
-Under certain conditions, our provider supports them without manual updates to the `terraform` configuration.
-
-#### Conditions
-
-The `terraform` configuration **must not** contain an explicit secret value.
-If it contains an explicit value that value will always have precedence and will overwrite outside changes.
-
-#### Usage
-
-To demonstrate this feature, we will create a sample secret with the following configuration:
-
-```terraform
-resource "bitwarden-sm_secret" "secret" {
-    key        = "my-dynamic-secret"
-    project_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-}
-```
-
-The result could look like this:
-
- ```bash
-$ terraform show
-
-# bitwarden-sm_secret.secret:
-resource "bitwarden-sm_secret" "secret" {
-    creation_date   = "2024-07-01T00:00:00.000000000Z"
-    id              = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-    key             = "dynamic-test-secret"
-    note            = ""
-    organization_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-    project_id      = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-    revision_date   = "2024-07-01T00:00:00.000000000Z"
-    value           = (sensitive value)
-}
-```
-
-Let's assume the secret value got updated outside `terraform`, e.g. in Bitwarden Secrets Manager.
-If one would execute `terraform apply` again, the plan would be empty:
-
-```bash
-No changes. Your infrastructure matches the configuration.
-
-Terraform has compared your real infrastructure against your configuration and found no differences, so no changes are needed.
-
-Apply complete! Resources: 0 added, 0 changed, 0 destroyed.
-```
-
-But, `terraform show` would display a new `revision_date`.
-
-### Importing an existing Secret into Terraform State
-
-To import a secret into the `terraform` state and configuration, the following steps are necessary:
-
-1. Add a secret resource to the `terraform` configuration file:
-    ```terraform
-    resource "bitwarden-sm_secret" "secret" {}
-    ```
-2. Get the ID of the secret to be imported from Bitwarden Secrets Manager
-3. Execute the following command to import the secret into the `terraform` state:
-    ```bash
-    $ terraform import "bitwarden-sm_secret.secret" "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-
-    bitwarden-sm_secret.secret: Import prepared!
-    Prepared bitwarden-sm_secret for import
-    bitwarden-sm_secret.secret: Refreshing state... [id=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx]
-
-    Import successful!
-
-    The resources that were imported are shown above. These resources are now in
-    your Terraform state and will henceforth be managed by Terraform.
-    ```
-4. Execute `terraform show` in order to see the imported information. The most important one for the next step is `key`:
-    ```bash
-   $ terraform show
-
-    # bitwarden-sm_secret.secret:
-    resource "bitwarden-sm_secret" "secret" {
-      creation_date   = "2024-07-01T00:00:00.000000000Z"
-      id              = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-      key             = "Key"
-      note            = "Note"
-      organization_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-      project_id      = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-      revision_date   = "2024-07-01T00:00:00.000000000Z"
-      value           = (sensitive value)
-    }
-    ```
-5. Take the `key` and update the `terraform` configuration file. This is necessary because `key` is the only required configuration value.
-    ```terraform
-    resource "bitwarden-sm_secret" "secret" {
-      key = "Key"
-    }
-    ```
-
-## Developing the Provider
-
-If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (see [Requirements](#requirements) above).
-
-To compile the provider, run `go install .`.
 This will build the provider and put the provider binary in the `$GOPATH/bin` directory.
 
+### Development Overrides
+
 In order to tell `terraform` to use the local build of the provider, add a `dev_override`.
-Therefore, create or open the file `~/.terraformrc` and add an entry for our `bitwarden-sm` provider:
+Therefore, create or open the file `~/.terraformrc` and add an entry for the `bitwarden-sm` provider:
 
 ```text
 provider_installation {
@@ -156,9 +43,41 @@ provider_installation {
 }
 ```
 
+### Creating Documentation
+
+The usage documentation of the provider can be found inside the [`/docs`](./docs) folder.
+This documentation is partly generated automatically from the source code and partly written by hand.
+It uses the [`tfplugindocs`](https://github.com/hashicorp/terraform-plugin-docs) and Hashicorp's official guides on how to write good [provider documentation](https://developer.hashicorp.com/terraform/registry/providers/docs).
+
 To generate or update documentation, run `go generate`.
 
-## Acceptance Tests
+```
+// Run "go generate" to format example terraform files and generate the docs for the registry/website
+
+// If you do not have terraform installed, you can remove the formatting command, but it is suggested to
+// ensure the documentation is formatted properly.
+//go:generate terraform fmt -recursive ./examples/
+
+// Run the docs generation tool, check its repository for more information on how it works and how docs
+// can be customized.
+//go:generate go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate
+```
+
+### Adding Dependencies
+
+This provider uses [Go modules](https://github.com/golang/go/wiki/Modules).
+Please see the Go documentation for the most up-to-date information about using Go modules.
+
+To add a new dependency `github.com/author/dependency` to your Terraform provider:
+
+```shell
+go get github.com/author/dependency
+go mod tidy
+```
+
+Then commit the changes to `go.mod` and `go.sum`.
+
+### Acceptance Tests
 
 In order to run the full suite of Acceptance tests, you need to provide the following 2 `.env` files:
 
@@ -182,13 +101,13 @@ The file [`test_utils.go`](./internal/provider/test_utils.go) uses this file to 
 
 If everything is provided, one can execute all acceptance tests with `make`:
 
-### Testing with `terraform` CLI
+#### Testing with `terraform` CLI
 
 ```shell
 make testacc
 ```
 
-### Testing with `tofu` CLI
+#### Testing with `tofu` CLI
 
 In order to run acceptance tests using the [OpenTofu](https://opentofu.org/) engine instead of Terraform, one needs to install the CLI first:
 https://opentofu.org/.
