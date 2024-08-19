@@ -102,24 +102,91 @@ func (d *projectsDataSource) Configure(ctx context.Context, req datasource.Confi
 		return
 	}
 
-	client := providerDataStruct.bitwardenClient
-	organizationId := providerDataStruct.organizationId
+	// TODO Due to concurrency issues in an underlying library, we replaced the implementation of a shared client with the initialization of one BitwardenClient per Terraform object
+	// Reference: https://github.com/bitwarden/sdk/pull/955
+	//client := providerDataStruct.bitwardenClient
+	//organizationId := providerDataStruct.organizationId
+	//
+	//if client == nil {
+	//	resp.Diagnostics.AddError(
+	//		"Client Not Initialized",
+	//		"The Bitwarden client was not properly initialized due to a missing Bitwarden API Client.",
+	//	)
+	//	return
+	//}
+	//
+	//if organizationId == "" {
+	//	resp.Diagnostics.AddError(
+	//		"Client Not Initialized",
+	//		"The Bitwarden client was not properly initialized due to an empty Organization ID.",
+	//	)
+	//	return
+	//}
 
-	if client == nil {
+	tflog.Debug(ctx, "Creating Bitwarden Secrets Manager Client for List Projects Datasource")
+
+	apiUrl := providerDataStruct.apiUrl
+	if apiUrl == "" {
 		resp.Diagnostics.AddError(
 			"Client Not Initialized",
-			"The Bitwarden client was not properly initialized due to a missing Bitwarden API Client.",
+			"The Bitwarden bitwardenClient was not properly initialized due to an empty API URL.",
 		)
 		return
 	}
 
+	identityUrl := providerDataStruct.identityUrl
+	if identityUrl == "" {
+		resp.Diagnostics.AddError(
+			"Client Not Initialized",
+			"The Bitwarden bitwardenClient was not properly initialized due to an empty IDENTITY URL.",
+		)
+		return
+	}
+
+	accessToken := providerDataStruct.accessToken
+	if accessToken == "" {
+		resp.Diagnostics.AddError(
+			"Client Not Initialized",
+			"The Bitwarden bitwardenClient was not properly initialized due to an empty Access Token.",
+		)
+		return
+	}
+
+	organizationId := providerDataStruct.organizationId
 	if organizationId == "" {
 		resp.Diagnostics.AddError(
 			"Client Not Initialized",
-			"The Bitwarden client was not properly initialized due to an empty Organization ID.",
+			"The Bitwarden bitwardenClient was not properly initialized due to an empty Organization ID.",
 		)
 		return
 	}
+
+	// Create a new bitwardenClient using the configuration values
+	client, err := sdk.NewBitwardenClient(&apiUrl, &identityUrl)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to Create Bitwarden Secrets Manager Client for List Projects Datasource",
+			"An unexpected error occurred when creating the Bitwarden Secrets Manager Client. "+
+				"If the error is not clear, please contact the provider developers.\n\n"+
+				"Bitwarden Secrets Manager Client Error: "+err.Error(),
+		)
+		return
+	}
+
+	tflog.Debug(ctx, "Bitwarden Secrets Manager Client created")
+
+	err = client.AccessTokenLogin(accessToken, &statePath)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unable to Authenticate Bitwarden Secrets Manager Client for List Projects Datasource",
+			"An unexpected error occurred when authenticating the Bitwarden Secrets Manager Client against the configured endpoint. "+
+				"If the error is not clear, please contact the provider developers.\n\n"+
+				"Bitwarden Secrets Manager Client Error: "+err.Error(),
+		)
+		return
+	}
+
+	tflog.Debug(ctx, "Bitwarden Secrets Manager Client authenticated")
 
 	d.bitwardenClient = client
 	d.organizationId = organizationId

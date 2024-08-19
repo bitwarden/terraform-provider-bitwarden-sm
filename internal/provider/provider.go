@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"github.com/bitwarden/sdk-go"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/function"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -44,8 +43,11 @@ func (p *BitwardenSecretsManagerProvider) Metadata(_ context.Context, _ provider
 }
 
 type BitwardenSecretsManagerProviderDataStruct struct {
-	bitwardenClient sdk.BitwardenClientInterface
-	organizationId  string
+	//bitwardenClient sdk.BitwardenClientInterface
+	apiUrl         string
+	identityUrl    string
+	accessToken    string
+	organizationId string
 }
 
 func (p *BitwardenSecretsManagerProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
@@ -231,40 +233,49 @@ func (p *BitwardenSecretsManagerProvider) Configure(ctx context.Context, req pro
 	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "bitwarden_secrets_manager_access_token")
 	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "bitwarden_secrets_manager_organization_id")
 
-	tflog.Debug(ctx, "Creating Bitwarden Secrets Manager Client")
-
-	// Create a new bitwardenClient using the configuration values
-	bitwardenClient, err := sdk.NewBitwardenClient(&apiUrl, &identityUrl)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to Create Bitwarden Secrets Manager Client",
-			"An unexpected error occurred when creating the Bitwarden Secrets Manager Client. "+
-				"If the error is not clear, please contact the provider developers.\n\n"+
-				"Bitwarden Secrets Manager Client Error: "+err.Error(),
-		)
-		return
-	}
-
-	tflog.Debug(ctx, "Bitwarden Secrets Manager Client created")
-
-	err = bitwardenClient.AccessTokenLogin(accessToken, &statePath)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Unable to Authenticate Bitwarden Secrets Manager Client",
-			"An unexpected error occurred when authenticating the Bitwarden Secrets Manager Client against the configured endpoint. "+
-				"If the error is not clear, please contact the provider developers.\n\n"+
-				"Bitwarden Secrets Manager Client Error: "+err.Error(),
-		)
-		return
-	}
-
-	tflog.Debug(ctx, "Bitwarden Secrets Manager Client authenticated")
+	// TODO Due to concurrency issues in an underlying library, we replaced the implementation of a shared client with the initialization of one BitwardenClient per Terraform object
+	// Reference: https://github.com/bitwarden/sdk/pull/955
+	//tflog.Debug(ctx, "Creating Bitwarden Secrets Manager Client")
+	//
+	//// Create a new bitwardenClient using the configuration values
+	//bitwardenClient, err := sdk.NewBitwardenClient(&apiUrl, &identityUrl)
+	//if err != nil {
+	//	resp.Diagnostics.AddError(
+	//		"Unable to Create Bitwarden Secrets Manager Client",
+	//		"An unexpected error occurred when creating the Bitwarden Secrets Manager Client. "+
+	//			"If the error is not clear, please contact the provider developers.\n\n"+
+	//			"Bitwarden Secrets Manager Client Error: "+err.Error(),
+	//	)
+	//	return
+	//}
+	//
+	//tflog.Debug(ctx, "Bitwarden Secrets Manager Client created")
+	//
+	//err = bitwardenClient.AccessTokenLogin(accessToken, &statePath)
+	//if err != nil {
+	//	resp.Diagnostics.AddError(
+	//		"Unable to Authenticate Bitwarden Secrets Manager Client",
+	//		"An unexpected error occurred when authenticating the Bitwarden Secrets Manager Client against the configured endpoint. "+
+	//			"If the error is not clear, please contact the provider developers.\n\n"+
+	//			"Bitwarden Secrets Manager Client Error: "+err.Error(),
+	//	)
+	//	return
+	//}
+	//
+	//tflog.Debug(ctx, "Bitwarden Secrets Manager Client authenticated")
 
 	// Make the bitwardenClient available during DataSource and Resource
 	// type Configure methods.
+	//providerDataStruct := BitwardenSecretsManagerProviderDataStruct{
+	//	bitwardenClient,
+	//	organizationId,
+	//}
+
 	providerDataStruct := BitwardenSecretsManagerProviderDataStruct{
-		bitwardenClient,
-		organizationId,
+		apiUrl:         apiUrl,
+		identityUrl:    identityUrl,
+		accessToken:    accessToken,
+		organizationId: organizationId,
 	}
 
 	resp.DataSourceData = providerDataStruct
