@@ -148,7 +148,7 @@ func (s *secretResource) Configure(ctx context.Context, req resource.ConfigureRe
 	//	return
 	//}
 
-	tflog.Debug(ctx, "Creating Bitwarden Secrets Manager Client for List Secrets Datasource")
+	tflog.Debug(ctx, "Creating Bitwarden Secrets Manager Client for Secrets Resource.")
 
 	apiUrl := providerDataStruct.apiUrl
 	if apiUrl == "" {
@@ -190,7 +190,7 @@ func (s *secretResource) Configure(ctx context.Context, req resource.ConfigureRe
 	client, err := sdk.NewBitwardenClient(&apiUrl, &identityUrl)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to Create Bitwarden Secrets Manager Client for List Secrets Datasource",
+			"Unable to Create Bitwarden Secrets Manager Client for Secrets Resource.",
 			"An unexpected error occurred when creating the Bitwarden Secrets Manager Client. "+
 				"If the error is not clear, please contact the provider developers.\n\n"+
 				"Bitwarden Secrets Manager Client Error: "+err.Error(),
@@ -203,7 +203,7 @@ func (s *secretResource) Configure(ctx context.Context, req resource.ConfigureRe
 	err = client.AccessTokenLogin(accessToken, &statePath)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to Authenticate Bitwarden Secrets Manager Client for List Secrets Datasource",
+			"Unable to Authenticate Bitwarden Secrets Manager Client for Secrets Resource.",
 			"An unexpected error occurred when authenticating the Bitwarden Secrets Manager Client against the configured endpoint. "+
 				"If the error is not clear, please contact the provider developers.\n\n"+
 				"Bitwarden Secrets Manager Client Error: "+err.Error(),
