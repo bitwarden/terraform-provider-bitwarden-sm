@@ -36,7 +36,7 @@ Its specific documentation and examples can be found here: [`secret.md`](./resou
 #### Dynamic Secrets
 
 This feature supports secret `value` updates in Bitwarden Secrets Manager without requiring manual updates in Terraform configurations.
-Provided that not explicit secret `value` hast been configured, changes to the secret `value` in Bitwarden Secrets Manager will get imported by the provider.
+Provided that no explicit secret `value` has been provided, changes to the secret `value` in Bitwarden Secrets Manager will get imported by the provider.
 Terraform resources which are consuming the secret will get updated accordingly, following their specific implementations.
 
 ### Importing an existing Secret into Terraform State
