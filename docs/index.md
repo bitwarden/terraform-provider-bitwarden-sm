@@ -94,7 +94,7 @@ To import an existing secret into the `terraform` state and configuration, the f
 - `access_token` (String, Sensitive) `Access Token` of the used Machine Account for Bitwarden Secrets Manager. This configuration value is _**optional**_ because it can also be provided via `BW_ACCESS_TOKEN` environment variable. However, it **must be provided** in one of these two ways.
 - `api_url` (String) URI for the **Bitwarden Secrets Manager** `API` endpoint. This configuration value is _**optional**_ because it can also be provided via `BW_API_URL` environment variable.  However, it **must be provided** in one of these two ways.
 - `identity_url` (String) URI for the **Bitwarden Secrets Manager** `IDENTITY` endpoint. This configuration value is _**optional**_ because it can also be provided via `BW_IDENTITY_API_URL` environment variable. However, it **must be provided** in one of these two ways.
-- `organization_id` (String, Sensitive) The `ID` of your Organization in Bitwarden Secrets Manager endpoints. This configuration value is _**optional**_ because it can also be provided via `BW_ORGANIZATION_ID` environment variable. However, it **must be provided** in one of these two ways.
+- `organization_id` (String, Sensitive) The `ID` of your Organization in Bitwarden Secrets Manager. This configuration value is _**optional**_ because it can also be provided via `BW_ORGANIZATION_ID` environment variable. However, it **must be provided** in one of these two ways.
 
 ## Example Provider Configuration
 
