@@ -71,17 +71,17 @@ EOF
 
 ### Required
 
-- `key` (String) String representation of the `key` of the secret. Inside Bitwarden Secrets Manager this is called name.
+- `key` (String) String representation of the `key` of the secret. Inside Bitwarden Secrets Manager this is called "name".
 
 ### Optional
 
 - `note` (String) String representation of the `note` of the secret inside Bitwarden Secrets Manager.
-- `project_id` (String) String representation of the `ID` of the project to which the secret belongs to. If the used machine account has no read access to this project, access will not be granted.
+- `project_id` (String) String representation of the `ID` of the project to which the secret belongs. If the used machine account has no read access to this project, access will not be granted.
 - `value` (String, Sensitive) String representation of the `value` of the secret inside Bitwarden Secrets Manager. This attribute is sensitive. The Dynamic Secrets feature enables compatibility with secret `value` changes in Bitwarden Secrets Manager without changes to the terraform plan.
 
 ### Read-Only
 
 - `creation_date` (String) String representation of the creation date of the secret.
 - `id` (String) String representation of the `ID` of the secret inside Bitwarden Secrets Manager.
-- `organization_id` (String) String representation of the `ID` of the organization to which the secret belongs to.
+- `organization_id` (String) String representation of the `ID` of the organization to which the secret belongs.
 - `revision_date` (String) String representation of the revision date of the secret.

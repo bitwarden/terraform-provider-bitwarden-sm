@@ -35,5 +35,5 @@ Read-Only:
 - `creation_date` (String) String representation of the creation date of the project.
 - `id` (String) String representation of the `ID` of the project inside Bitwarden Secrets Manager.
 - `name` (String) String representation of the `name` of the secret inside Bitwarden Secrets Manager.
-- `organization_id` (String) String representation of the `ID` of the organization to which the project belongs to.
+- `organization_id` (String) String representation of the `ID` of the organization to which the project belongs.
 - `revision_date` (String) String representation of the revision date of the project.

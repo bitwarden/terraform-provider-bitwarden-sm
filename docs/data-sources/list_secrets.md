@@ -33,4 +33,4 @@ output "secrets" {
 Read-Only:
 
 - `id` (String) String representation of the `ID` of the secret inside Bitwarden Secrets Manager.
-- `key` (String) String representation of the `key` of the secret. Inside Bitwarden Secrets Manager this is called name.
+- `key` (String) String representation of the `key` of the secret. Inside Bitwarden Secrets Manager this is called "name".

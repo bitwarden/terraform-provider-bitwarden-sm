@@ -83,7 +83,7 @@ func (p *BitwardenSecretsManagerProvider) Schema(_ context.Context, _ provider.S
 				Sensitive: true,
 			},
 			"organization_id": schema.StringAttribute{
-				Description: "The ID of your Organization in Bitwarden Secrets Manager endpoints. " +
+				Description: "The ID of your Organization in Bitwarden Secrets Manager. " +
 					"This configuration value is optional because it can also be provided via BW_ORGANIZATION_ID environment variable. " +
 					"However, it **must be provided** in one of these two ways.",
 				MarkdownDescription: "The `ID` of your Organization in Bitwarden Secrets Manager endpoints. " +

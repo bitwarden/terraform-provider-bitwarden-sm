@@ -55,8 +55,8 @@ func (l *listSecretsDataSource) Schema(_ context.Context, _ datasource.SchemaReq
 							Computed:            true,
 						},
 						"key": schema.StringAttribute{
-							Description:         "String representation of the key of the secret. Inside Bitwarden Secrets Manager this is called name.",
-							MarkdownDescription: "String representation of the `key` of the secret. Inside Bitwarden Secrets Manager this is called name.",
+							Description:         "String representation of the key of the secret. Inside Bitwarden Secrets Manager this is called \"name\".",
+							MarkdownDescription: "String representation of the `key` of the secret. Inside Bitwarden Secrets Manager this is called \"name\".",
 							Computed:            true,
 						},
 					},

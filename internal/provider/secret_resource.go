@@ -62,8 +62,8 @@ func (s *secretResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 				},
 			},
 			"key": schema.StringAttribute{
-				Description:         "String representation of the key of the secret. Inside Bitwarden Secrets Manager this is called name.",
-				MarkdownDescription: "String representation of the `key` of the secret. Inside Bitwarden Secrets Manager this is called name.",
+				Description:         "String representation of the key of the secret. Inside Bitwarden Secrets Manager this is called \"name\".",
+				MarkdownDescription: "String representation of the `key` of the secret. Inside Bitwarden Secrets Manager this is called \"name\".",
 				Required:            true,
 			},
 			"value": schema.StringAttribute{
@@ -80,14 +80,14 @@ func (s *secretResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 				Optional:            true,
 			},
 			"project_id": schema.StringAttribute{
-				Description:         "String representation of the ID of the project to which the secrets belongs to. If the used machine account has no read access to this project, access will not be granted.",
-				MarkdownDescription: "String representation of the `ID` of the project to which the secret belongs to. If the used machine account has no read access to this project, access will not be granted.",
+				Description:         "String representation of the ID of the project to which the secrets belongs. If the used machine account has no read access to this project, access will not be granted.",
+				MarkdownDescription: "String representation of the `ID` of the project to which the secret belongs. If the used machine account has no read access to this project, access will not be granted.",
 				Computed:            true,
 				Optional:            true,
 			},
 			"organization_id": schema.StringAttribute{
-				Description:         "String representation of the ID of the organization to which the secrets belongs to.",
-				MarkdownDescription: "String representation of the `ID` of the organization to which the secret belongs to.",
+				Description:         "String representation of the ID of the organization to which the secrets belongs.",
+				MarkdownDescription: "String representation of the `ID` of the organization to which the secret belongs.",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),

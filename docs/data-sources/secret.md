@@ -42,9 +42,9 @@ output "secret" {
 ### Read-Only
 
 - `creation_date` (String) String representation of the creation date of the secret.
-- `key` (String) String representation of the `key` of the secret. Inside Bitwarden Secrets Manager this is called name.
+- `key` (String) String representation of the `key` of the secret. Inside Bitwarden Secrets Manager this is called "name".
 - `note` (String) String representation of the `note` of the secret inside Bitwarden Secrets Manager.
-- `organization_id` (String) String representation of the `ID` of the organization to which the secret belongs to.
-- `project_id` (String) String representation of the `ID` of the project to which the secret belongs to. If the used machine account has no read access to this project, access will not be granted.
+- `organization_id` (String) String representation of the `ID` of the organization to which the secret belongs.
+- `project_id` (String) String representation of the `ID` of the project to which the secret belongs. If the used machine account has no read access to this project, access will not be granted.
 - `revision_date` (String) String representation of the revision date of the secret.
 - `value` (String, Sensitive) String representation of the `value` of the secret inside Bitwarden Secrets Manager. This attribute is sensitive.
