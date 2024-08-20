@@ -303,3 +303,89 @@ func TestAccResourceSecretImportSecret(t *testing.T) {
 		},
 	})
 }
+
+// This acceptance test validates that our provider implementation is compatible with Dynamic Secrets.
+// Dynamic Secrets are secrets that support updated secret values and automated secret value rotation.
+// To support this, our provider imports updated secret values into its own state even if terraform owns
+// or manages the secret and its value was updated outside terraform. However, this feature only works
+// for secret resources were no explicit value is provided in the terraform configuration.
+func TestAccResourceSecretDynamicSecret(t *testing.T) {
+	secretKey := "Test-Secret-" + generateRandomString()
+	updatedSecretValue := generateRandomString()
+	secretNote := generateRandomString()
+	projectName := "Test-Project-" + generateRandomString()
+
+	bitwardenClient, organizationId, err := newBitwardenClient()
+	if err != nil {
+		t.Fatalf("Error creating bitwardenClient: %s", err)
+	}
+
+	project, preCheckError := bitwardenClient.Projects().Create(organizationId, projectName)
+	if preCheckError != nil {
+		t.Fatal("Error creating test project for provider validation.")
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				// This step creates a secret resource, meaning, terraform owns this resource
+				// IMPORTANT: the empty value passed to buildSecretResourceConfig() creates a terraform plan
+				// without an explicitly provided secret value. The secret value gets generates by the provider.
+				Config: buildProviderConfigFromEnvFile(t) +
+					buildSecretResourceConfig(secretKey, "", secretNote, project.ID),
+				Check: resource.ComposeTestCheckFunc(
+					// The following checks validate that the secret was creates successfully
+					resource.TestCheckResourceAttr("bitwarden-sm_secret.test", "key", secretKey),
+					resource.TestCheckResourceAttrSet("bitwarden-sm_secret.test", "value"),
+					resource.TestCheckResourceAttr("bitwarden-sm_secret.test", "organization_id", organizationId),
+					resource.TestCheckResourceAttr("bitwarden-sm_secret.test", "note", secretNote),
+					resource.TestCheckResourceAttr("bitwarden-sm_secret.test", "project_id", project.ID),
+
+					// In this "check" is used to update the secret value outside terraform.
+					func(s *terraform.State) error {
+						rs, ok := s.RootModule().Resources["bitwarden-sm_secret.test"]
+						if !ok {
+							return fmt.Errorf("not found: %s", "bitwarden-sm_secret.test")
+						}
+						_, updateErr := bitwardenClient.Secrets().Update(
+							rs.Primary.ID,
+							secretKey,
+							updatedSecretValue,
+							secretNote,
+							organizationId,
+							[]string{project.ID},
+						)
+						if updateErr != nil {
+							return fmt.Errorf("unable to Update Secret: %s", updateErr.Error())
+						}
+						return nil
+					},
+				),
+			},
+			{
+				// The generated config in this step is the same as before. However, the secret value changed outside
+				// terraform. But, since the provider supports Dynamic Secrets, the updated secret value does not
+				// create a new plan: `ExpectNonEmptyPlan: false` and the value inside the terraform state has
+				// the expected value: `TestCheckResourceAttr("bitwarden-sm_secret.test", "value", updatedSecretValue)`
+				Config: buildProviderConfigFromEnvFile(t) +
+					buildSecretResourceConfig(secretKey, "", secretNote, project.ID),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("bitwarden-sm_secret.test", "key", secretKey),
+					resource.TestCheckResourceAttr("bitwarden-sm_secret.test", "value", updatedSecretValue),
+					resource.TestCheckResourceAttr("bitwarden-sm_secret.test", "organization_id", organizationId),
+					resource.TestCheckResourceAttr("bitwarden-sm_secret.test", "note", secretNote),
+					resource.TestCheckResourceAttr("bitwarden-sm_secret.test", "project_id", project.ID),
+				),
+				ExpectNonEmptyPlan: false,
+			},
+		},
+		CheckDestroy: func(state *terraform.State) error {
+			_, cleanUpErr := bitwardenClient.Projects().Delete([]string{project.ID})
+			if cleanUpErr != nil {
+				t.Fatalf("Error cleaning up test project: %s", cleanUpErr.Error())
+			}
+			return nil
+		},
+	})
+}

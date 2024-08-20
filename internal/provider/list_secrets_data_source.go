@@ -41,20 +41,23 @@ func (l *listSecretsDataSource) Metadata(_ context.Context, req datasource.Metad
 
 func (l *listSecretsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Fetches a list of secrets accessible by the machine account.",
+		Description:         "The list_secrets data source fetches all secrets accessible by the used machine account.",
+		MarkdownDescription: "The `list_secrets` data source fetches all secrets accessible by the used machine account.",
 		Attributes: map[string]schema.Attribute{
 			"secrets": schema.ListNestedAttribute{
-				Description: "List of secrets accessible by the machine account.",
+				Description: "Nested list of all fetched secrets",
 				Computed:    true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{
-							Description: "Placeholder identifier attribute.",
-							Computed:    true,
+							Description:         "String representation of the ID of the secret inside Bitwarden Secrets Manager.",
+							MarkdownDescription: "String representation of the `ID` of the secret inside Bitwarden Secrets Manager.",
+							Computed:            true,
 						},
 						"key": schema.StringAttribute{
-							Description: "The key of the secret.",
-							Computed:    true,
+							Description:         "String representation of the key of the secret. Inside Bitwarden Secrets Manager this is called \"name\".",
+							MarkdownDescription: "String representation of the `key` of the secret. Inside Bitwarden Secrets Manager this is called \"name\".",
+							Computed:            true,
 						},
 					},
 				},

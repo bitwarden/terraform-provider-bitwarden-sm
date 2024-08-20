@@ -50,51 +50,58 @@ func (s *secretResource) Metadata(_ context.Context, req resource.MetadataReques
 
 func (s *secretResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Fetches the content of a secret.",
+		Description:         "The secret resource manages secrets in Bitwarden Secrets Manager.",
+		MarkdownDescription: "The `secret` resource manages secrets in Bitwarden Secrets Manager.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				Description: "The id of the secret.",
-				Computed:    true,
+				Description:         "String representation of the ID of the secret inside Bitwarden Secrets Manager.",
+				MarkdownDescription: "String representation of the `ID` of the secret inside Bitwarden Secrets Manager.",
+				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"key": schema.StringAttribute{
-				Description: "The key of the secret.",
-				Required:    true,
+				Description:         "String representation of the key of the secret. Inside Bitwarden Secrets Manager this is called \"name\".",
+				MarkdownDescription: "String representation of the `key` of the secret. Inside Bitwarden Secrets Manager this is called \"name\".",
+				Required:            true,
 			},
 			"value": schema.StringAttribute{
-				Description: "The value of the secret.",
-				Computed:    true,
-				Optional:    true,
-				Sensitive:   true,
+				Description:         "String representation of the value of the secret inside Bitwarden Secrets Manager. This attribute is sensitive. The Dynamic Secrets feature enables compatibility with secret value changes in Bitwarden Secrets Manager without changes to the terraform plan.",
+				MarkdownDescription: "String representation of the `value` of the secret inside Bitwarden Secrets Manager. This attribute is sensitive. The Dynamic Secrets feature enables compatibility with secret `value` changes in Bitwarden Secrets Manager without changes to the terraform plan.",
+				Computed:            true,
+				Optional:            true,
+				Sensitive:           true,
 			},
 			"note": schema.StringAttribute{
-				Description: "The note of the secret.",
-				Computed:    true,
-				Optional:    true,
+				Description:         "String representation of the note of the secret inside Bitwarden Secrets Manager.",
+				MarkdownDescription: "String representation of the `note` of the secret inside Bitwarden Secrets Manager.",
+				Computed:            true,
+				Optional:            true,
 			},
 			"project_id": schema.StringAttribute{
-				Description: "Project id of the secret.",
-				Computed:    true,
-				Optional:    true,
+				Description:         "String representation of the ID of the project to which the secrets belongs. If the used machine account has no read access to this project, access will not be granted.",
+				MarkdownDescription: "String representation of the `ID` of the project to which the secret belongs. If the used machine account has no read access to this project, access will not be granted.",
+				Computed:            true,
+				Optional:            true,
 			},
 			"organization_id": schema.StringAttribute{
-				Description: "Organization id of the secret.",
-				Computed:    true,
+				Description:         "String representation of the ID of the organization to which the secrets belongs.",
+				MarkdownDescription: "String representation of the `ID` of the organization to which the secret belongs.",
+				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"creation_date": schema.StringAttribute{
-				Description: "The creation date of the secret.",
+				Description: "String representation of the creation date of the secret.",
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"revision_date": schema.StringAttribute{
-				Description: "The revision date of the secret.",
+				Description: "String representation of the revision date of the secret.",
 				Computed:    true,
 			},
 		},

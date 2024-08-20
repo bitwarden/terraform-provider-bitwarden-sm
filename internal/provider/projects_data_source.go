@@ -45,24 +45,28 @@ func (d *projectsDataSource) Metadata(_ context.Context, req datasource.Metadata
 
 func (d *projectsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Fetches a list of projects accessible by the machine account.",
+		Description:         "The projects data source fetches all projects accessible by the used machine account.",
+		MarkdownDescription: "The `projects` data source fetches all projects accessible by the used machine account.",
 		Attributes: map[string]schema.Attribute{
 			"projects": schema.ListNestedAttribute{
-				Description: "List of projects accessible by the machine account.",
+				Description: "Nested list of all fetched projects.",
 				Computed:    true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{
-							Description: "String identifier of the project.",
-							Computed:    true,
+							Description:         "String representation of the ID of the project inside Bitwarden Secrets Manager.",
+							MarkdownDescription: "String representation of the `ID` of the project inside Bitwarden Secrets Manager.",
+							Computed:            true,
 						},
 						"name": schema.StringAttribute{
-							Description: "String name of the project.",
-							Computed:    true,
+							Description:         "String representation of the name of the secret inside Bitwarden Secrets Manager.",
+							MarkdownDescription: "String representation of the `name` of the secret inside Bitwarden Secrets Manager.",
+							Computed:            true,
 						},
 						"organization_id": schema.StringAttribute{
-							Description: "String identifier of the organization the projects belongs to.",
-							Computed:    true,
+							Description:         "String representation of the ID of the organization to which the project belongs.",
+							MarkdownDescription: "String representation of the `ID` of the organization to which the project belongs.",
+							Computed:            true,
 						},
 						"creation_date": schema.StringAttribute{
 							Description: "String representation of the creation date of the project.",
