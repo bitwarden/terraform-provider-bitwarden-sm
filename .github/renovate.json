@@ -2,6 +2,9 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["github>bitwarden/renovate-config"],
   "enabledManagers": ["gomod", "github-actions"],
+  "constraints": {
+    "go": "1.22"
+  },
   "packageRules": [
     {
       "groupName": "Go dependencies",
@@ -9,7 +12,7 @@
       "matchUpdateTypes": ["minor", "patch"]
     },
     {
-      "groupName": "GitHub Actions dependencies",
+      "groupName": "gh minor",
       "matchManagers": ["github-actions"],
       "matchUpdateTypes": ["minor", "patch"]
     }
