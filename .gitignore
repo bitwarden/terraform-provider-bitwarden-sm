@@ -2,7 +2,7 @@
 .DS_Store
 Thumbs.db
 
-# IDEs and editors
+# IDEs and Editors
 .idea/
 .project
 .classpath
@@ -10,56 +10,29 @@ Thumbs.db
 *.launch
 .settings/
 *.sublime-workspace
+*.iml
 
 # Visual Studio Code
-.vscode/*
+.vscode/
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
-.history/*
+.history/
 
-# Node
-node_modules
-npm-debug.log
-
-*.dll
-*.exe
-example.tf
-terraform.tfplan
-terraform.tfstate
+# Go-specific
 bin/
-dist/
-modules-dev/
-/pkg/
-website/.vagrant
-website/.bundle
-website/build
-website/node_modules
-.vagrant/
-*.backup
-./*.tfstate
-.terraform/
-*.log
-*.bak
-*~
-.*.swp
-.idea
-*.iml
+pkg/
 *.test
 
-website/vendor
+# Terraform
+*.tfstate
+*.tfplan
+.terraform/
+*.backup
+*.bak
 
-# Test exclusions
-!command/test-fixtures/**/*.tfstate
-!command/test-fixtures/**/.terraform/
-
-# Keep windows files with windows line endings
-*.winfile eol=crlf
-
-# Folder for local testing
+# Local testing and development
 /_test/
-
-# Local .env files for testing and development
 .env.*
 .bw-provider-state*
