@@ -7,11 +7,6 @@ on:
       - "TR6_adding_continuous_registry_deployment"
   pull_request:
 
-env:
-  CGO_ENABLED: 1
-  CGO_LDFLAGS: '-static -Wl,-unresolved-symbols=ignore-all'
-  CC: musl-gcc
-
 jobs:
   check-run:
     name: Check PR run
@@ -31,18 +26,11 @@ jobs:
       - name: Install Go dependencies
         run: go mod tidy
 
-      - name: Extract provider name from go.mod
-        run: |
-          NAME=$(grep "^module" go.mod | awk -F'/' '{print $NF}')
-          echo "NAME=${NAME}" >> $GITHUB_ENV
-
       - name: Install build dependencies
         run: sudo apt update && sudo apt install musl-tools -y
 
       - name: Build binary
-        run: |
-          sudo apt update && sudo apt install musl-tools -y
-          go build -v -o terraform-provider-${{ env.NAME }} .
+        run: make build-linux-x86
 
       - name: Verify binary
-        run: file terraform-provider-${{ env.NAME }}
+        run: make verify-binary-linux

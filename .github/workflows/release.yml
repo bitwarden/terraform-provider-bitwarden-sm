@@ -5,9 +5,6 @@ on:
     tags:
       - "v*.*.*"
 
-env:
-  CGO_ENABLED: 1
-
 jobs:
   check-run:
     name: Check PR run
@@ -35,22 +32,11 @@ jobs:
       - name: Install build dependencies
         run: sudo apt update && sudo apt install musl-tools -y
 
-      - name: Extract provider name from go.mod
-        run: |
-          NAME=$(grep "^module" go.mod | awk -F'/' '{print $NF}')
-          echo "NAME=${NAME}" >> $GITHUB_ENV
-
       - name: Build statically linked binary
-        env:
-          CGO_LDFLAGS: '-static -Wl,-unresolved-symbols=ignore-all'
-          CC: musl-gcc
-          GOOS: linux
-          GOARCH: amd64
-        run: |
-              go build -v -o terraform-provider-${{ env.NAME }}_${{ env.GITHUB_REF_NAME }}
+        run: make build-linux-x86 BINARY_NAME="terraform-provider-${{ env.NAME }}_${{ env.GITHUB_REF_NAME }}"
 
       - name: Verify binary
-        run: file terraform-provider-${{ env.NAME }}_${{ env.GITHUB_REF_NAME }}
+        run: make verify-binary-linux BINARY_NAME="terraform-provider-${{ env.NAME }}_${{ env.GITHUB_REF_NAME }}"
 
   linux-aarch64:
     runs-on: ubuntu-24.04
@@ -73,22 +59,11 @@ jobs:
       - name: Install build dependencies
         run: sudo apt update && sudo apt install gcc-aarch64-linux-gnu musl musl-dev musl-tools -y
 
-      - name: Extract provider name from go.mod
-        run: |
-          NAME=$(grep "^module" go.mod | awk -F'/' '{print $NF}')
-          echo "NAME=${NAME}" >> $GITHUB_ENV
-
       - name: Build statically linked binary
-        env:
-          CGO_LDFLAGS: '-static -Wl,-unresolved-symbols=ignore-all'
-          CC: musl-gcc
-          GOOS: linux
-          GOARCH: arm64
-        run: |
-          go build -o terraform-provider-${{ env.NAME }}_${{ env.GITHUB_REF_NAME }}
+        run: make build-linux-arm64 BINARY_NAME="terraform-provider-${{ env.NAME }}_${{ env.GITHUB_REF_NAME }}"
 
       - name: Verify binary
-        run: file terraform-provider-${{ env.NAME }}_${{ env.GITHUB_REF_NAME }}
+        run: make verify-binary-linux BINARY_NAME="terraform-provider-${{ env.NAME }}_${{ env.GITHUB_REF_NAME }}"
 
   darwin-x86_64:
     runs-on: macos-14
@@ -108,22 +83,11 @@ jobs:
 #          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
 #          passphrase: ${{ secrets.PASSPHRASE }}
 
-      - name: Extract provider name from go.mod
-        run: |
-          NAME=$(grep "^module" go.mod | awk -F'/' '{print $NF}')
-          echo "NAME=${NAME}" >> $GITHUB_ENV
-
       - name: Build amd64 binary
-        env:
-          GOOS: darwin
-          GOARCH: amd64
-        run: |
-          go build -o terraform-provider-${{ env.NAME }}_${{ env.GITHUB_REF_NAME }}
+        run: make build-macos-amd64 BINARY_NAME="terraform-provider-${{ env.NAME }}_${{ env.GITHUB_REF_NAME }}"
 
       - name: Verify binary
-        run: |
-          file terraform-provider-${{ env.NAME }}_${{ env.GITHUB_REF_NAME }}
-          otool -L ./terraform-provider-${{ env.NAME }}_${{ env.GITHUB_REF_NAME }}
+        run: verify-binary-macos-amd64 BINARY_NAME="terraform-provider-${{ env.NAME }}_${{ env.GITHUB_REF_NAME }}"
 
   darwin-aarch64:
     runs-on: macos-14
@@ -143,17 +107,8 @@ jobs:
 #          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
 #          passphrase: ${{ secrets.PASSPHRASE }}
 
-      - name: Extract provider name from go.mod
-        run: |
-          NAME=$(grep "^module" go.mod | awk -F'/' '{print $NF}')
-          echo "NAME=${NAME}" >> $GITHUB_ENV
-
       - name: Build statically linked binary
-        env:
-          GOOS: darwin
-          GOARCH: arm64
-        run: |
-          go build -o terraform-provider-${{ env.NAME }}_${{ env.GITHUB_REF_NAME }}
+        run: make build-macos-arm64 BINARY_NAME="terraform-provider-${{ env.NAME }}_${{ env.GITHUB_REF_NAME }}"
 
       - name: Verify binary
         run: |
