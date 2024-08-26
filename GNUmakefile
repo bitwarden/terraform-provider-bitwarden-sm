@@ -12,7 +12,7 @@ PARAM_GOOS ?= linux
 PARAM_GOARCH ?= amd64
 PARAM_CGO_ENABLED ?= 1
 PARAM_CGO_LDFLAGS ?= '-s -w -static -Wl,-unresolved-symbols=ignore-all'
-PARAM_VERIFY ?= '-i statically linked'
+PARAM_VERIFY ?= 'statically linked'
 
 # Setup default environment variables
 .PHONY: set-env
@@ -60,7 +60,7 @@ build-macos-arm64:
 # Verify binary
 .PHONY: verify-binary
 verify-binary:
-	file $(BINARY_NAME) | grep $(PARAM_VERIFY)
+	file $(BINARY_NAME) | grep -i $(PARAM_VERIFY)
 
 # Verify linux binary
 .PHONY: verify-binary-linux
