@@ -1,27 +1,36 @@
-TEST?=./...
-GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
-OPENTOFU_PATH?=$$(which tofu)
+# Default test path and formatting
+TEST ?= ./...
+GOFMT_FILES ?= $(shell find . -name '*.go' |grep -v vendor)
+OPENTOFU_PATH ?= $(shell which tofu)
 
 # Extract binary name from go.mod
-BINARY_NAME?=$$(grep "^module" go.mod | awk -F'/' '{print $$NF}')
+BINARY_NAME?=$(shell grep "^module" go.mod | awk -F'/' '{print $$NF}')
 
-# Build parameters
-PARAM_CC?=musl-gcc
-PARAM_GOOS?=linux
-PARAM_GOARCH?=amd64
-PARAM_CGO_ENABLED?=1
-PARAM_CGO_LDFLAGS?='-static -Wl,-unresolved-symbols=ignore-all'
-PARAM_VERIFY?='static'
+# Default build parameters
+PARAM_CC ?= musl-gcc
+PARAM_GOOS ?= linux
+PARAM_GOARCH ?= amd64
+PARAM_CGO_ENABLED ?= 1
+PARAM_CGO_LDFLAGS ?= '-s -w -static -Wl,-unresolved-symbols=ignore-all'
+PARAM_VERIFY ?= '-i statically linked'
+
+# Setup default environment variables
+.PHONY: set-env
+set-env:
+	go env -w GOOS=$(PARAM_GOOS)
+	go env -w GOARCH=$(PARAM_GOARCH)
+	go env -w CGO_ENABLED=$(PARAM_CGO_ENABLED)
+
+# Setup linux environment variables
+.PHONY: set-env-linux
+set-env-linux: set-env
+	go env -w CC=$(PARAM_CC)
+	go env -w CGO_LDFLAGS=$(PARAM_CGO_LDFLAGS)
 
 # Build a static linux binary
 .PHONY: build-linux
-build-linux:
-	CC=$(PARAM_CC) \
-  	GOOS=$(PARAM_GOOS) \
-  	GOARCH=$(PARAM_GOARCH) \
-	CGO_ENABLED=$(PARAM_CGO_ENABLED) \
-  	CGO_LDFLAGS=$(PARAM_CGO_LDFLAGS) \
-  	go build -v -o $(BINARY_NAME) .
+build-linux: set-env-linux
+	go build -v -o $(BINARY_NAME) .
 
 # Build statically binary for linux amd64
 .PHONY: build-linux-amd64
@@ -35,10 +44,7 @@ build-linux-arm64:
 
 # Build a macOS binary
 .PHONY: build-macos
-build-macos:
-	GOOS=$(PARAM_GOOS) \
-	GOARCH=$(PARAM_GOARCH) \
-	CGO_ENABLED=$(PARAM_CGO_ENABLED) \
+build-macos: set-env
 	go build -v -o $(BINARY_NAME) .
 
 # Build a macOS binary for amd64
@@ -54,7 +60,7 @@ build-macos-arm64:
 # Verify binary
 .PHONY: verify-binary
 verify-binary:
-	file $(BINARY_NAME) | grep -i $(PARAM_VERIFY)
+	file $(BINARY_NAME) | grep $(PARAM_VERIFY)
 
 # Verify linux binary
 .PHONY: verify-binary-linux
@@ -65,6 +71,11 @@ verify-binary-linux:
 .PHONY: verify-binary-macos-amd64
 verify-binary-macos-amd64:
 	$(MAKE) PARAM_VERIFY='executable x86_64' verify-binary
+
+# Verify macos binary arm64
+.PHONY: verify-binary-macos-arm64
+verify-binary-macos-arm64:
+	$(MAKE) PARAM_VERIFY='executable arm64' verify-binary
 
 default: testacc
 

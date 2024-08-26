@@ -44,7 +44,7 @@ jobs:
           terraform_wrapper: false
 
       - name: Install Go dependencies
-        run: go mod download
+        run: go mod tidy
 
       - name: Install build dependencies
         run: sudo apt update && sudo apt install musl-tools -y
@@ -93,7 +93,7 @@ jobs:
           tofu_wrapper: false
 
       - name: Install Go dependencies
-        run: go mod download
+        run: go mod tidy
 
       - name: Install build dependencies
         run: sudo apt update && sudo apt install musl-tools -y
