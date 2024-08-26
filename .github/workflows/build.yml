@@ -30,7 +30,7 @@ jobs:
         run: sudo apt update && sudo apt install musl-tools -y
 
       - name: Build binary
-        run: make build-linux-x86
+        run: make build-linux-amd64
 
       - name: Verify binary
         run: make verify-binary-linux
