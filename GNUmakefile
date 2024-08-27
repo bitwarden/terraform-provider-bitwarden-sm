@@ -96,11 +96,10 @@ verify-binary-darwin-amd64:
 verify-binary-darwin-arm64:
 	$(MAKE) PARAM_VERIFY="'executable arm64'" verify-binary
 
-
 # Verify Windows binary amd64
 .PHONY: verify-binary-windows-amd64
 verify-binary-windows-amd64:
-	file $(BINARY_NAME)$(BINARY_VERSION).exe
+	file $(BINARY_NAME)$(BINARY_VERSION).exe | grep -i "PE32+ executable (console) x86-64"
 
 default: testacc
 

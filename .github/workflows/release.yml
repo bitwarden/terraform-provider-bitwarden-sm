@@ -99,8 +99,13 @@ jobs:
         run: |
           MODULE_NAME=$(grep "^module" go.mod | awk -F'/' '{print $NF}')
           VERSION=$(echo ${{ github.ref_name }} | sed 's/^v//')
-          BINARY="${MODULE_NAME}_v${VERSION}"
           ARCHIVE="${MODULE_NAME}_${VERSION}_${{ matrix.os }}_${{ matrix.arch }}.zip"
+
+          # Conditionally set the binary name with or without .exe extension
+          BINARY="${MODULE_NAME}_v${VERSION}"
+          if [ "${{ matrix.os }}" = "windows" ]; then
+            BINARY="${BINARY}.exe"
+          fi
 
           # Create ZIP archive
           zip ${ARCHIVE} ${BINARY}
