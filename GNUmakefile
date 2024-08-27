@@ -98,8 +98,8 @@ verify-binary-darwin-arm64:
 
 
 # Verify Windows binary amd64
-.PHONY: verify-windows-amd64
-verify-windows-amd64:
+.PHONY: verify-binary-windows-amd64
+verify-binary-windows-amd64:
 	file $(BINARY_NAME)$(BINARY_VERSION).exe
 
 default: testacc
