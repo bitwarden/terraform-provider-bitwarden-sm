@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - "main"
-      - "TR6_adding_continuous_registry_deployment"
   pull_request:
 
 jobs:

@@ -30,6 +30,12 @@ set-env-linux: set-env
 	go env -w CC=$(PARAM_CC)
 	go env -w CGO_LDFLAGS=$(PARAM_CGO_LDFLAGS)
 
+# Setup windows environment variables
+.PHONY: set-env-windows
+set-env-windows: set-env
+	go env -w CC=/usr/bin/x86_64-w64-mingw32-gcc
+	go env -w CGO_LDFLAGS=$(PARAM_CGO_LDFLAGS)
+
 # Build a static linux binary
 .PHONY: build-linux
 build-linux: set-env-linux
@@ -60,6 +66,16 @@ build-darwin-amd64:
 build-darwin-arm64:
 	$(MAKE) PARAM_GOOS="darwin" PARAM_GOARCH="arm64" build-darwin
 
+# Build a Windows binary
+.PHONY: build-windows
+build-windows: set-env-windows
+	go build -v -o $(BINARY_NAME)$(BINARY_VERSION).exe .
+
+# Build a Windows binary for amd64
+.PHONY: build-windows-amd64
+build-windows-amd64:
+	$(MAKE) PARAM_GOOS="windows" build-windows
+
 # Verify binary
 .PHONY: verify-binary
 verify-binary:
@@ -79,6 +95,12 @@ verify-binary-darwin-amd64:
 .PHONY: verify-binary-darwin-arm64
 verify-binary-darwin-arm64:
 	$(MAKE) PARAM_VERIFY="'executable arm64'" verify-binary
+
+
+# Verify Windows binary amd64
+.PHONY: verify-windows-amd64
+verify-windows-amd64:
+	file $(BINARY_NAME)$(BINARY_VERSION).exe
 
 default: testacc
 
