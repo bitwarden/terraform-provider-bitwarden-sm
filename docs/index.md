@@ -10,30 +10,30 @@ description: |-
 
 ## Usage
 
-### Fetching Projects
+### Fetching projects
 
 In order to fetch a list of Projects which are accessible by the configured machine account, the `projects` **data source** should be used.
 Its specific documentation and examples can be found here: [`projects.md`](./data-sources/projects.md).
 
-### Listing Secrets
+### Listing secrets
 
 In order to fetch a list of secrets which are accessible by the configured machine account, the `list_secrets` **data source** should be used.
 This data source only a limited amount of information about listed secrets: `id` and the `key`.
 Its specific documentation and examples can be found here: [`list_secrets.md`](./data-sources/list_secrets.md).
 
-### Reading Secrets
+### Reading secrets
 
 To read all available information about a specific secret, the `secret` **data source** should be used.
 Provided the configured machine accounts has `read` access to the corresponding project, this data sources returns all information and can be used to inject the secret `value` into other terraform objects.
 Its specific documentation and examples can be found here: [`secret.md`](./data-sources/secret.md).
 
-### Managing Secrets
+### Managing secrets
 
 The `secret` **resource** is the right terraform object to create and manipulate secrets.
 It implements the co-ownership of secrets stored in Bitwarden Secrets Manager.
 Its specific documentation and examples can be found here: [`secret.md`](./resource/secret.md).
 
-### Secrets Generator
+#### Secrets Generator
 
 It is suggested to prevent providing secret `values` in clear text in the terraform configuration.
 To improve the usability of the provider, this feature supports the secure generation of a secret `value` if no explicit value has been provided in the terraform configuration.
@@ -41,13 +41,13 @@ It uses the secret generator algorithms of the underlying [Bitwarden Go SDK](htt
 The generation of secret `values` can be influenced by a set of parameters.
 Specific documentation and examples can be found here: [`secret.md`](./resource/secret.md).
 
-#### Dynamic Secrets
+#### Dynamic secrets
 
 This feature supports secret `value` updates in Bitwarden Secrets Manager without requiring manual updates in Terraform configurations.
 Provided that no explicit secret `value` has been provided in the terraform configuration, changes to the secret `value` in Bitwarden Secrets Manager will get imported by the provider.
 Terraform resources which are consuming the secret will get updated accordingly, following their specific implementations.
 
-### Importing an existing Secret into Terraform State
+### Importing an existing secret into Terraform state
 
 To import an existing secret into the `terraform` state and configuration, the following steps are necessary:
 

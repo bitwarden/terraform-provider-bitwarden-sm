@@ -1,19 +1,30 @@
 name: Scan
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - "main"
-  pull_request:
+      - "rc"
+      - "hotfix-rc"
+  pull_request_target:
+    types: [opened, synchronize]
 
+# TODO: see https://bitwarden.atlassian.net/l/cp/SLtTZJ90 for configuration tips
 jobs:
+  check-run:
+    name: Check PR run
+    uses: bitwarden/gh-actions/.github/workflows/check-run.yml@main
+
   sast:
     name: SAST scan
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
+    needs: check-run
     permissions:
       contents: read
       pull-requests: write
       security-events: write
+
     steps:
       - name: Check out repo
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
@@ -21,7 +32,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Scan with Checkmarx
-        uses: checkmarx/ast-github-action@92b6d52097badece63efe997ffe75207010bb80c # 2.0.29
+        uses: checkmarx/ast-github-action@1fe318de2993222574e6249750ba9000a4e2a6cd # 2.0.33
         env:
           INCREMENTAL: "${{ contains(github.event_name, 'pull_request') && '--sast-incremental' || '' }}"
         with:
@@ -34,18 +45,20 @@ jobs:
             --report-format sarif \
             --filter "state=TO_VERIFY;PROPOSED_NOT_EXPLOITABLE;CONFIRMED;URGENT" \
             --output-path . ${{ env.INCREMENTAL }}
-      # This will not work until the repo is public, commenting out for now
-      # - name: Upload Checkmarx results to GitHub
-      #   uses: github/codeql-action/upload-sarif@b611370bb5703a7efb587f9d136a52ea24c5c38c # v3.25.11
-      #   with:
-      #     sarif_file: cx_result.sarif
+
+      - name: Upload Checkmarx results to GitHub
+        uses: github/codeql-action/upload-sarif@2c779ab0d087cd7fe7b826087247c2c81f27bfa6 # v3.26.5
+        with:
+          sarif_file: cx_result.sarif
 
   quality:
     name: Quality scan
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
+    needs: check-run
     permissions:
       contents: read
       pull-requests: write
+
     steps:
       - name: Check out repo
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
@@ -58,63 +71,6 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
-          # TODO: see https://docs.sonarsource.com/sonarcloud/advanced-setup/analysis-parameters/
-          # for parameters to configure
           args: >
             -Dsonar.organization=${{ github.repository_owner }}
             -Dsonar.projectKey=${{ github.repository_owner }}_${{ github.event.repository.name }}
-
-  docs:
-    name: Validate Docs
-    runs-on: ubuntu-24.04
-    permissions:
-      contents: read
-    env:
-      CGO_ENABLED: 1
-      CGO_LDFLAGS: -lm
-    steps:
-      - name: Check out repo
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
-        with:
-          go-version-file: 'go.mod'
-
-      - uses: hashicorp/setup-terraform@651471c36a6092792c552e8b1bef71e592b462d8 # v3.1.1
-        with:
-          terraform_version: '1.9.2'
-          terraform_wrapper: false
-
-      - name: Install Go dependencies
-        run: go mod tidy
-
-      - name: Generate documentation
-        run: |
-          go generate ./...
-
-      - name: Git diff
-        run: |
-          git diff --compact-summary --exit-code examples docs || \
-            (echo; echo "Unexpected difference in directories [/examples, /docs] after code generation. Run 'go generate ./...' command and commit."; exit 1)
-
-  lint:
-    name: Run Linters
-    runs-on: ubuntu-24.04
-    permissions:
-      contents: read
-    steps:
-      - name: Check out repo
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
-        with:
-          go-version-file: 'go.mod'
-
-      - name: Run linters
-        uses: golangci/golangci-lint-action@aaa42aa0628b4ae2578232a66b541047968fac86 # v6.1.0
-        with:
-          version: latest

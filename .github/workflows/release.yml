@@ -20,18 +20,18 @@ jobs:
       version: ${{ steps.prepare-release.outputs.version }}
     strategy:
       matrix:
-        os: [ubuntu-24.04, darwin, windows]
+        os: [ubuntu-22.04, darwin, windows]
         arch: [amd64, arm64]
         include:
-          - os: ubuntu-24.04
+          - os: ubuntu-22.04
             arch: amd64
-            runner: ubuntu-24.04
+            runner: ubuntu-22.04
             build_target: build-linux-amd64
             verify_target: verify-binary-linux
             dependencies: musl-tools
-          - os: ubuntu-24.04
+          - os: ubuntu-22.04
             arch: arm64
-            runner: ubuntu-24.04 # This should be the arm runner to enable native compilation
+            runner: ubuntu-22.04 # This should be the arm runner to enable native compilation
             build_target: build-linux-arm64
             verify-target: verify-binary-linux
             dependencies: gcc-aarch64-linux-gnu musl musl-dev musl-tools #This is not enough to enable cross-compilation
@@ -47,7 +47,7 @@ jobs:
             verify_target: verify-binary-darwin-arm64
           - os: windows
             arch: amd64
-            runner: ubuntu-24.04
+            runner: ubuntu-22.04
             build_target: build-windows-amd64
             verify_target: verify-binary-windows-amd64
             dependencies: mingw-w64
@@ -56,9 +56,12 @@ jobs:
             arch: arm64
 
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
-      - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
+      - name: Check out repo
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Setup Go
+        uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
         with:
           go-version-file: 'go.mod'
           cache: true
@@ -71,7 +74,7 @@ jobs:
           passphrase: ${{ secrets.PASSPHRASE }}
 
       - name: Install dependencies (Linux only)
-        if: matrix.os == 'ubuntu-24.04'
+        if: matrix.os == 'ubuntu-22.04'
         run: sudo apt update && sudo apt install -y ${{ matrix.dependencies }}
 
       - name: Install dependencies (Windows cross-compile only)
@@ -120,10 +123,12 @@ jobs:
 
   create-release:
     name: Create Release
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     needs: build-artifact
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Check out repo
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: Download ZIP files
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8

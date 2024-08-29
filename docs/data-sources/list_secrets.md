@@ -10,7 +10,7 @@ description: |-
 
 The `list_secrets` data source fetches all secrets accessible by the used machine account.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "bitwarden-sm_list_secrets" "secrets" {}

@@ -1,0 +1,47 @@
+name: Scan
+
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+
+jobs:
+  docs:
+    name: Validate Docs
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+
+      - name: Check out repo
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Setup Go
+        uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+
+      - name: Install build dependencies
+        run: sudo apt update && sudo apt install musl-tools -y
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@651471c36a6092792c552e8b1bef71e592b462d8 # v3.1.1
+        with:
+          terraform_version: '1.9.2'
+          terraform_wrapper: false
+
+      - name: Install Go dependencies
+        run: go mod tidy
+
+      - name: Generate documentation
+        run: |
+          go generate ./...
+
+      - name: Git diff
+        run: |
+          git diff --compact-summary --exit-code examples docs || \
+            (echo; echo "Unexpected difference in directories [/examples, /docs] after code generation. Run 'go generate ./...' command and commit."; exit 1)
