@@ -171,8 +171,8 @@ func (s *secretDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	state.Note = types.StringValue(secret.Note)
 	state.ProjectID = types.StringValue(*secret.ProjectID)
 	state.OrganizationID = types.StringValue(secret.OrganizationID)
-	state.CreationDate = types.StringValue(secret.CreationDate)
-	state.RevisionDate = types.StringValue(secret.RevisionDate)
+	state.CreationDate = types.StringValue(secret.CreationDate.String())
+	state.RevisionDate = types.StringValue(secret.RevisionDate.String())
 
 	// Set state
 	diags = resp.State.Set(ctx, &state)
