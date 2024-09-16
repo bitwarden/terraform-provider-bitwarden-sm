@@ -4,7 +4,7 @@ module github.com/bitwarden/terraform-provider-bitwarden-sm
 go 1.22.5
 
 require (
-	github.com/bitwarden/sdk-go v0.1.1
+	github.com/bitwarden/sdk-go v1.0.0
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/terraform-plugin-framework v1.10.0
 	github.com/hashicorp/terraform-plugin-go v0.23.0
