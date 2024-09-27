@@ -6,13 +6,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"golang.org/x/net/context"
-	"math/rand"
-	"time"
 )
 
 var (
@@ -42,6 +43,16 @@ type secretResourceModel struct {
 	OrganizationID types.String `tfsdk:"organization_id"`
 	CreationDate   types.String `tfsdk:"creation_date"`
 	RevisionDate   types.String `tfsdk:"revision_date"`
+	AvoidAmbiguous types.Bool   `tfsdk:"avoid_ambiguous"`
+	Length         types.Int64  `tfsdk:"length"`
+	Lowercase      types.Bool   `tfsdk:"lowercase"`
+	MinLowercase   types.Int64  `tfsdk:"min_lowercase"`
+	MinNumber      types.Int64  `tfsdk:"min_number"`
+	MinSpecial     types.Int64  `tfsdk:"min_special"`
+	MinUppercase   types.Int64  `tfsdk:"min_uppercase"`
+	Numbers        types.Bool   `tfsdk:"numbers"`
+	Special        types.Bool   `tfsdk:"special"`
+	Uppercase      types.Bool   `tfsdk:"uppercase"`
 }
 
 func (s *secretResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -103,6 +114,81 @@ func (s *secretResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			"revision_date": schema.StringAttribute{
 				Description: "String representation of the revision date of the secret.",
 				Computed:    true,
+			},
+			"avoid_ambiguous": schema.BoolAttribute{
+				Description: "Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. When set to true, the generated password will not contain ambiguous characters. The ambiguous characters are: I, O, l, 0, 1.",
+				Computed:    true,
+				Optional:    true,
+				Default:     booldefault.StaticBool(false),
+			},
+			"length": schema.Int64Attribute{
+				Description: "Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. The length of the generated password. Note that the password length must be greater than the sum of all the minimums.",
+				Computed:    true,
+				Optional:    true,
+				Default:     int64default.StaticInt64(64),
+				Validators: []validator.Int64{
+					AtLeastSumOf("min_lowercase", "min_uppercase", "min_number", "min_special"),
+				},
+			},
+			"lowercase": schema.BoolAttribute{
+				Description: "Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. Configures the password generator to include lowercase characters (a-z).",
+				Computed:    true,
+				Optional:    true,
+				Default:     booldefault.StaticBool(true),
+			},
+			"min_lowercase": schema.Int64Attribute{
+				Description: "Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. Configures the minimum number of lowercase characters in the generated password. When set, the value must be between 1 and 9. This value is ignored if lowercase is false.",
+				Computed:    true,
+				Optional:    true,
+				Default:     int64default.StaticInt64(1),
+				Validators: []validator.Int64{
+					ConditionalMin("lowercase", "min_lowercase"),
+				},
+			},
+			"uppercase": schema.BoolAttribute{
+				Description: "Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. Configures the password generator to include uppercase characters (A-Z).",
+				Computed:    true,
+				Optional:    true,
+				Default:     booldefault.StaticBool(true),
+			},
+			"min_uppercase": schema.Int64Attribute{
+				Description: "Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. Configures the minimum number of uppercase characters in the generated password. When set, the value must be between 1 and 9. This value is ignored if uppercase is false.",
+				Computed:    true,
+				Optional:    true,
+				Default:     int64default.StaticInt64(1),
+				Validators: []validator.Int64{
+					ConditionalMin("uppercase", "min_uppercase"),
+				},
+			},
+			"numbers": schema.BoolAttribute{
+				Description: "Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. Configures the password generator to include numbers (0-9)",
+				Computed:    true,
+				Optional:    true,
+				Default:     booldefault.StaticBool(true),
+			},
+			"min_number": schema.Int64Attribute{
+				Description: "Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. Configures the minimum number of numbers in the generated password. When set, the value must be between 1 and 9. This value is ignored if numbers is false.",
+				Computed:    true,
+				Optional:    true,
+				Default:     int64default.StaticInt64(1),
+				Validators: []validator.Int64{
+					ConditionalMin("numbers", "min_number"),
+				},
+			},
+			"special": schema.BoolAttribute{
+				Description: "Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. Configures the password generator to include special characters: ! @ # $ % ^ & *.",
+				Computed:    true,
+				Optional:    true,
+				Default:     booldefault.StaticBool(false),
+			},
+			"min_special": schema.Int64Attribute{
+				Description: "Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. Configures the minimum number of special characters in the generated password. When set, the value must be between 1 and 9. This value is ignored if special is false.",
+				Computed:    true,
+				Optional:    true,
+				Default:     int64default.StaticInt64(1),
+				Validators: []validator.Int64{
+					ConditionalMin("special", "min_special"),
+				},
 			},
 		},
 	}
@@ -169,10 +255,17 @@ func (s *secretResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	// TODO: Dummy implementation for testing purposes, replace once secretValueCreate(rules... string) is part of go-sdk
 	var value string
 	if plan.Value.IsUnknown() {
-		value = createSecretValue()
+		generatedValue, err := createSecretValue(&plan, s.bitwardenClient)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error generating password",
+				err.Error(),
+			)
+			return
+		}
+		value = generatedValue
 	} else {
 		value = plan.Value.ValueString()
 	}
@@ -201,6 +294,16 @@ func (s *secretResource) Create(ctx context.Context, req resource.CreateRequest,
 	state.OrganizationID = types.StringValue(secret.OrganizationID)
 	state.CreationDate = types.StringValue(secret.CreationDate.String())
 	state.RevisionDate = types.StringValue(secret.RevisionDate.String())
+	state.AvoidAmbiguous = plan.AvoidAmbiguous
+	state.Length = plan.Length
+	state.Lowercase = plan.Lowercase
+	state.MinLowercase = plan.MinLowercase
+	state.MinNumber = plan.MinNumber
+	state.MinSpecial = plan.MinSpecial
+	state.MinUppercase = plan.MinUppercase
+	state.Numbers = plan.Numbers
+	state.Special = plan.Special
+	state.Uppercase = plan.Uppercase
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, state)
@@ -283,7 +386,19 @@ func (s *secretResource) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 	value := plan.Value.ValueString()
 	if value == "" {
-		value = state.Value.ValueString()
+		if newGeneratorConfig(&plan, &state) {
+			generatedValue, err := createSecretValue(&plan, s.bitwardenClient)
+			if err != nil {
+				resp.Diagnostics.AddError(
+					"Error generating password",
+					err.Error(),
+				)
+				return
+			}
+			value = generatedValue
+		} else {
+			value = state.Value.ValueString()
+		}
 	}
 	note := plan.Note.ValueString()
 	if note == "" {
@@ -317,6 +432,16 @@ func (s *secretResource) Update(ctx context.Context, req resource.UpdateRequest,
 	state.OrganizationID = types.StringValue(secret.OrganizationID)
 	state.CreationDate = types.StringValue(secret.CreationDate.String())
 	state.RevisionDate = types.StringValue(secret.RevisionDate.String())
+	state.AvoidAmbiguous = plan.AvoidAmbiguous
+	state.Length = plan.Length
+	state.Lowercase = plan.Lowercase
+	state.MinLowercase = plan.MinLowercase
+	state.MinNumber = plan.MinNumber
+	state.MinSpecial = plan.MinSpecial
+	state.MinUppercase = plan.MinUppercase
+	state.Numbers = plan.Numbers
+	state.Special = plan.Special
+	state.Uppercase = plan.Uppercase
 
 	// Set state to fully populated data
 	diags = resp.State.Set(ctx, state)
@@ -363,13 +488,43 @@ func (s *secretResource) ImportState(ctx context.Context, req resource.ImportSta
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func createSecretValue() string {
-	chars := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	seed := rand.New(rand.NewSource(time.Now().UnixNano()))
-	b := make([]byte, 8)
-	for i := range b {
-		b[i] = chars[seed.Intn(len(chars))]
+func createSecretValue(config *secretResourceModel, bitwardenClient sdk.BitwardenClientInterface) (string, error) {
+	minLowercase := config.MinLowercase.ValueInt64()
+	minNumber := config.MinNumber.ValueInt64()
+	minSpecial := config.MinSpecial.ValueInt64()
+	minUppercase := config.MinUppercase.ValueInt64()
+
+	request := sdk.PasswordGeneratorRequest{
+		AvoidAmbiguous: config.AvoidAmbiguous.ValueBool(),
+		Length:         config.Length.ValueInt64(),
+		Lowercase:      config.Lowercase.ValueBool(),
+		MinLowercase:   &minLowercase,
+		MinNumber:      &minNumber,
+		MinSpecial:     &minSpecial,
+		MinUppercase:   &minUppercase,
+		Numbers:        config.Numbers.ValueBool(),
+		Special:        config.Special.ValueBool(),
+		Uppercase:      config.Uppercase.ValueBool(),
 	}
 
-	return string(b)
+	password, err := bitwardenClient.Generators().GeneratePassword(request)
+	if err != nil {
+		return "", err
+	}
+
+	return *password, nil
+}
+
+func newGeneratorConfig(plan *secretResourceModel, state *secretResourceModel) bool {
+	// Compare all relevant generator configuration attributes between plan and state
+	return plan.AvoidAmbiguous.ValueBool() != state.AvoidAmbiguous.ValueBool() ||
+		plan.Length.ValueInt64() != state.Length.ValueInt64() ||
+		plan.Lowercase.ValueBool() != state.Lowercase.ValueBool() ||
+		plan.MinLowercase.ValueInt64() != state.MinLowercase.ValueInt64() ||
+		plan.MinNumber.ValueInt64() != state.MinNumber.ValueInt64() ||
+		plan.MinSpecial.ValueInt64() != state.MinSpecial.ValueInt64() ||
+		plan.MinUppercase.ValueInt64() != state.MinUppercase.ValueInt64() ||
+		plan.Numbers.ValueBool() != state.Numbers.ValueBool() ||
+		plan.Special.ValueBool() != state.Special.ValueBool() ||
+		plan.Uppercase.ValueBool() != state.Uppercase.ValueBool()
 }

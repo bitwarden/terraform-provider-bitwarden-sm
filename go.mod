@@ -1,13 +1,14 @@
 module github.com/bitwarden/terraform-provider-bitwarden-sm
 
 // A Go version constraint is configured in renovate.json
-go 1.22.5
+go 1.23.0
 
 require (
-	github.com/bitwarden/sdk-go v1.0.0
+	github.com/bitwarden/sdk-go v1.0.2
 	github.com/google/uuid v1.6.0
-	github.com/hashicorp/terraform-plugin-framework v1.11.0
-	github.com/hashicorp/terraform-plugin-go v0.23.0
+	github.com/hashicorp/terraform-plugin-framework v1.12.0
+	github.com/hashicorp/terraform-plugin-framework-validators v0.13.0
+	github.com/hashicorp/terraform-plugin-go v0.24.0
 	github.com/hashicorp/terraform-plugin-log v0.9.0
 	github.com/hashicorp/terraform-plugin-testing v1.10.0
 	github.com/joho/godotenv v1.5.1
@@ -64,6 +65,6 @@ require (
 	golang.org/x/tools v0.24.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240903143218-8af14fe29dc1 // indirect
-	google.golang.org/grpc v1.66.0 // indirect
+	google.golang.org/grpc v1.66.2 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 )

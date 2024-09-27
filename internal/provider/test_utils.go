@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/bitwarden/sdk-go"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/joho/godotenv"
@@ -155,25 +156,55 @@ func buildProviderConfigFromEnvFile(t *testing.T, filePath ...string) string {
 	return providerConfig
 }
 
-func buildSecretResourceConfig(key, value, note, projectId string) string {
-	if value == "" {
-		return fmt.Sprintf(`
+type SecretResourceConfig struct {
+	key          types.String
+	value        types.String
+	note         types.String
+	projectId    types.String
+	length       types.Int64
+	minLowercase types.Int64
+	minNumber    types.Int64
+	minUppercase types.Int64
+}
 
-        resource "bitwarden-sm_secret" "test" {
-            key = "%s"
-            note = "%s"
-            project_id = "%s"
-        }
-        `, key, note, projectId)
-	} else {
-		return fmt.Sprintf(`
+func buildSecretResourceConfig(config SecretResourceConfig) string {
+	configString := `
 
-        resource "bitwarden-sm_secret" "test" {
-            key = "%s"
-            value = "%s"
-            note = "%s"
-            project_id = "%s"
-        }
-        `, key, value, note, projectId)
+	resource "bitwarden-sm_secret" "test" {`
+	if config.key.ValueString() != "" {
+		configString += fmt.Sprintf(`
+			key = "%s"`, config.key.ValueString())
 	}
+	if config.value.ValueString() != "" {
+		configString += fmt.Sprintf(`
+			value = "%s"`, config.value.ValueString())
+	}
+	if config.note.ValueString() != "" {
+		configString += fmt.Sprintf(`
+			note = "%s"`, config.note.ValueString())
+	}
+	if config.projectId.ValueString() != "" {
+		configString += fmt.Sprintf(`
+			project_id = "%s"`, config.projectId.ValueString())
+	}
+	if config.length.ValueInt64() > 0 {
+		configString += fmt.Sprintf(`
+			length = %d`, config.length.ValueInt64())
+	}
+	if config.minLowercase.ValueInt64() > 0 {
+		configString += fmt.Sprintf(`
+			min_lowercase = %d`, config.minLowercase.ValueInt64())
+	}
+	if config.minNumber.ValueInt64() > 0 {
+		configString += fmt.Sprintf(`
+			min_number = %d`, config.minNumber.ValueInt64())
+	}
+	if config.minUppercase.ValueInt64() > 0 {
+		configString += fmt.Sprintf(`
+			min_uppercase = %d`, config.minUppercase.ValueInt64())
+	}
+
+	configString += `
+	}`
+	return configString
 }
