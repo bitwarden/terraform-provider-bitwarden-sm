@@ -16,14 +16,15 @@ jobs:
 
       - name: Check out repo
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Setup Go
         uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
         with:
           go-version-file: 'go.mod'
           cache: true
+
+      - name: Install Go dependencies
+        run: go mod tidy
 
       - name: Install build dependencies
         run: sudo apt update && sudo apt install musl-tools -y
@@ -34,12 +35,9 @@ jobs:
           terraform_version: '1.9.2'
           terraform_wrapper: false
 
-      - name: Install Go dependencies
-        run: go mod tidy
-
       - name: Generate documentation
         run: |
-          go generate ./...
+          make create-docs-linux
 
       - name: Git diff
         run: |

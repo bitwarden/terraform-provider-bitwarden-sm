@@ -36,6 +36,12 @@ set-env-windows: set-env
 	go env -w CC=/usr/bin/x86_64-w64-mingw32-gcc
 	go env -w CGO_LDFLAGS=$(PARAM_CGO_LDFLAGS)
 
+# Generate documentation on linux
+.PHONY: create-docs-linux
+create-docs-linux: set-env-linux
+	terraform fmt -recursive ./examples/
+	go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate
+
 # Build a static linux binary
 .PHONY: build-linux
 build-linux: set-env-linux
@@ -127,3 +133,14 @@ testacc_tofu:
 	TF_ACC_PROVIDER_NAMESPACE="hashicorp" \
 	TF_ACC_PROVIDER_HOST="registry.opentofu.org" \
 	go test $(TEST) -v $(TESTARGS) -timeout 10m
+
+# Reset local go env
+.PHONY: reset-go-env
+reset-go-env:
+	go env -u GOROOT
+	go env -u GOPATH
+	go env -u GOARCH
+	go env -u GOOS
+	go env -u CGO_ENABLED
+	go env -u GO111MODULE
+	go env -u CGO_LDFLAGS
