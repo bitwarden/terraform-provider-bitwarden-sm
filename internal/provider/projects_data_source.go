@@ -154,8 +154,8 @@ func (d *projectsDataSource) Read(ctx context.Context, _ datasource.ReadRequest,
 			ID:             types.StringValue(project.ID),
 			Name:           types.StringValue(project.Name),
 			OrganizationID: types.StringValue(project.OrganizationID),
-			CreationDate:   types.StringValue(project.CreationDate),
-			RevisionDate:   types.StringValue(project.RevisionDate),
+			CreationDate:   types.StringValue(project.CreationDate.String()),
+			RevisionDate:   types.StringValue(project.RevisionDate.String()),
 		}
 
 		state.Projects = append(state.Projects, projectState)

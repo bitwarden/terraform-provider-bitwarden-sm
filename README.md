@@ -7,7 +7,7 @@ The purpose of this Terraform Provider is to streamline the process of using Bit
 ## Requirements
 
 - [Terraform](https://developer.hashicorp.com/terraform/downloads) >= 1.5
-- [Go](https://golang.org/doc/install) >= 1.22.5
+- [Go](https://golang.org/doc/install) >= 1.23.0
 
 ## Developing the Provider
 

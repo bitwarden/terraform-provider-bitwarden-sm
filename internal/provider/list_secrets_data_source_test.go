@@ -137,12 +137,12 @@ func testAccCheckIfSecretExistsInOutput(secretId, secretKey string) resource.Tes
 			return fmt.Errorf("not found: %s", "data.bitwarden-sm_secrets.test")
 		}
 		attributes := rs.Primary.Attributes
-		numberOfProjects, err := strconv.Atoi(attributes["secrets.#"])
+		numberOfSecrets, err := strconv.Atoi(attributes["secrets.#"])
 		if err != nil {
 			return fmt.Errorf("error: %s", err)
 		}
 
-		for i := range numberOfProjects {
+		for i := range numberOfSecrets {
 			key := "secrets." + strconv.Itoa(i) + ".id"
 			if attributes[key] == secretId {
 				key = "secrets." + strconv.Itoa(i) + ".key"
