@@ -8,9 +8,54 @@ on:
 
 jobs:
 
-  build:
-    name: Build
-    runs-on: ubuntu-22.04
+  check-run:
+    name: Check PR run
+    uses: bitwarden/gh-actions/.github/workflows/check-run.yml@main
+
+  build-artifact:
+    name: Build and verify artifact
+    runs-on: ${{ matrix.runner }}
+    needs: check-run
+    outputs:
+      module_name: ${{ steps.prepare-release.outputs.module_name }}
+      version: ${{ steps.prepare-release.outputs.version }}
+    strategy:
+      matrix:
+        os: [ ubuntu-22.04, darwin, windows ]
+        arch: [ amd64, arm64 ]
+        include:
+          - os: ubuntu-22.04
+            arch: amd64
+            runner: ubuntu-22.04
+            build_target: build-linux-amd64
+            verify_target: verify-binary-linux
+            dependencies: musl-tools
+          - os: ubuntu-22.04
+            arch: arm64
+            runner: Terraform-provider-bitwarden-sm-linux
+            build_target: build-linux-arm64
+            verify-target: verify-binary-linux
+            dependencies: musl-tools
+          - os: darwin
+            arch: amd64
+            runner: macos-14
+            build_target: build-darwin-amd64
+            verify_target: verify-binary-darwin-amd64
+          - os: darwin
+            arch: arm64
+            runner: macos-14
+            build_target: build-darwin-arm64
+            verify_target: verify-binary-darwin-arm64
+          - os: windows
+            arch: amd64
+            runner: ubuntu-22.04
+            build_target: build-windows-amd64
+            verify_target: verify-binary-windows-amd64
+            dependencies: mingw-w64
+        exclude:
+          - os: windows
+            arch: arm64
+
     steps:
 
       - name: Check out repo
@@ -22,14 +67,50 @@ jobs:
           go-version-file: 'go.mod'
           cache: true
 
+      - name: Install dependencies (Linux only)
+        if: matrix.os == 'ubuntu-22.04'
+        run: sudo apt update && sudo apt install -y ${{ matrix.dependencies }}
+
+      - name: Install dependencies (Windows cross-compile only)
+        if: matrix.os == 'windows'
+        run: sudo apt update && sudo apt install -y ${{ matrix.dependencies }}
+
       - name: Install Go dependencies
         run: go mod tidy
 
-      - name: Install build dependencies
-        run: sudo apt update && sudo apt install musl-tools -y
-
       - name: Build binary
-        run: make build-linux-amd64
+        run: make ${{ matrix.build_target }} BINARY_VERSION="_${{ github.ref_name }}"
 
       - name: Verify binary
-        run: make verify-binary-linux
+        run: make ${{ matrix.verify_target }} BINARY_VERSION="_${{ github.ref_name }}"
+
+      - name: Prepare release artifacts
+        id: prepare-release
+        run: |
+          MODULE_NAME=$(grep "^module" go.mod | awk -F'/' '{print $NF}')
+          BINARY_VERSION=$(echo ${{ github.ref_name }})
+          ARCHIVE="${MODULE_NAME}_${BINARY_VERSION}_${{ matrix.os }}_${{ matrix.arch }}.zip"
+
+          # Conditionally set the binary name with or without .exe extension
+          BINARY="${MODULE_NAME}_${BINARY_VERSION}"
+          if [ "${{ matrix.os }}" = "windows" ]; then
+            BINARY="${BINARY}.exe"
+          fi
+
+          # Create ZIP archive
+          zip ${ARCHIVE} ${BINARY}
+
+          echo "module_name=${MODULE_NAME}" >> "$GITHUB_OUTPUT"
+          echo "version=${BINARY_VERSION}" >> "$GITHUB_OUTPUT"
+
+          echo "module_name=${MODULE_NAME}" >> "$GITHUB_ENV"
+          echo "binary_version=${BINARY_VERSION}" >> "$GITHUB_ENV"
+          echo "archive=${ARCHIVE}" >> "$GITHUB_ENV"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
+        with:
+          name: ${{ env.module_name }}_${{ env.binary_version }}_${{ matrix.os }}_${{ matrix.arch }}
+          retention-days: 5
+          path: |
+            ${{ env.archive }}
