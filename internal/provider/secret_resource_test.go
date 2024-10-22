@@ -199,7 +199,7 @@ func TestAccResourceSecretCreateSecretWithCustomGeneratorConfig(t *testing.T) {
 						}
 
 						if int64(len(attributes["value"])) != config.length.ValueInt64() {
-							return fmt.Errorf("lenght: %d does not match custom generator config: %d", len(attributes["value"]), config.minLowercase)
+							return fmt.Errorf("length: %d does not match custom generator config: %d", len(attributes["value"]), config.minLowercase)
 						}
 
 						lowerCaseCount, upperCaseCount, digitCount := int64(0), int64(0), int64(0)

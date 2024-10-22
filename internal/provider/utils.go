@@ -40,7 +40,7 @@ func stringUUIDValidate() stringUUIDValidator {
 	return stringUUIDValidator{}
 }
 
-// AtLeastSumOfValidator ensures that the length is at least the sum of the provided minimums
+// AtLeastSumOfValidator ensures that the length is at least the sum of the provided minimums.
 type AtLeastSumOfValidator struct {
 	minLowercaseAttr string
 	minUppercaseAttr string
@@ -49,7 +49,7 @@ type AtLeastSumOfValidator struct {
 }
 
 func (v AtLeastSumOfValidator) Description(_ context.Context) string {
-	return fmt.Sprintf("the length attibute must be greater than or equal to the sum of min_lowercase, min_uppercase, min_number, and min_special.")
+	return "the length attibute must be greater than or equal to the sum of min_lowercase, min_uppercase, min_number, and min_special."
 }
 
 func (v AtLeastSumOfValidator) MarkdownDescription(ctx context.Context) string {
@@ -94,7 +94,7 @@ func (v AtLeastSumOfValidator) ValidateInt64(ctx context.Context, req validator.
 	}
 }
 
-// AtLeastSumOf returns a custom validator for the length attribute
+// AtLeastSumOf returns a custom validator for the length attribute.
 func AtLeastSumOf(minLowercaseAttr, minUppercaseAttr, minNumberAttr, minSpecialAttr string) validator.Int64 {
 	return AtLeastSumOfValidator{
 		minLowercaseAttr: minLowercaseAttr,
