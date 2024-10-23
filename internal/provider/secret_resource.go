@@ -117,13 +117,13 @@ func (s *secretResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 				Computed:    true,
 			},
 			"avoid_ambiguous": schema.BoolAttribute{
-				Description: "Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. When set to true, the generated password will not contain ambiguous characters. The ambiguous characters are: I, O, l, 0, 1.",
+				Description: "Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. When set to true, the generated secret will not contain ambiguous characters. The ambiguous characters are: I, O, l, 0, 1.",
 				Computed:    true,
 				Optional:    true,
 				Default:     booldefault.StaticBool(false),
 			},
 			"length": schema.Int64Attribute{
-				Description: "Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. The length of the generated password. Note that the password length must be greater than the sum of all the minimums.",
+				Description: "Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. The length of the generated secret. Note that the password length must be greater than the sum of all the minimums.",
 				Computed:    true,
 				Optional:    true,
 				Default:     int64default.StaticInt64(64),
@@ -143,7 +143,7 @@ func (s *secretResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 				Default:     booldefault.StaticBool(true),
 			},
 			"min_lowercase": schema.Int64Attribute{
-				Description: "Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. Configures the minimum number of lowercase characters in the generated password. When set, the value must be between 1 and 9. This value is ignored if lowercase is false.",
+				Description: "Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. Configures the minimum number of lowercase characters in the generated secret. When set, the value must be between 1 and 9. This value is ignored if lowercase is false.",
 				Computed:    true,
 				Optional:    true,
 				Default:     int64default.StaticInt64(1),
@@ -158,7 +158,7 @@ func (s *secretResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 				Default:     booldefault.StaticBool(true),
 			},
 			"min_uppercase": schema.Int64Attribute{
-				Description: "Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. Configures the minimum number of uppercase characters in the generated password. When set, the value must be between 1 and 9. This value is ignored if uppercase is false.",
+				Description: "Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. Configures the minimum number of uppercase characters in the generated secret. When set, the value must be between 1 and 9. This value is ignored if uppercase is false.",
 				Computed:    true,
 				Optional:    true,
 				Default:     int64default.StaticInt64(1),
@@ -173,7 +173,7 @@ func (s *secretResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 				Default:     booldefault.StaticBool(true),
 			},
 			"min_number": schema.Int64Attribute{
-				Description: "Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. Configures the minimum number of numbers in the generated password. When set, the value must be between 1 and 9. This value is ignored if numbers is false.",
+				Description: "Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. Configures the minimum number of numbers in the generated secret. When set, the value must be between 1 and 9. This value is ignored if numbers is false.",
 				Computed:    true,
 				Optional:    true,
 				Default:     int64default.StaticInt64(1),
@@ -188,7 +188,7 @@ func (s *secretResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 				Default:     booldefault.StaticBool(false),
 			},
 			"min_special": schema.Int64Attribute{
-				Description: "Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. Configures the minimum number of special characters in the generated password. When set, the value must be between 1 and 9. This value is ignored if special is false.",
+				Description: "Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. Configures the minimum number of special characters in the generated secret. When set, the value must be between 1 and 9. This value is ignored if special is false.",
 				Computed:    true,
 				Optional:    true,
 				Default:     int64default.StaticInt64(1),
