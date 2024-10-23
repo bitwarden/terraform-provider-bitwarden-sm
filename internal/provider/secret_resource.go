@@ -123,7 +123,7 @@ func (s *secretResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 				Default:     booldefault.StaticBool(false),
 			},
 			"length": schema.Int64Attribute{
-				Description: "Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. The length of the generated secret. Note that the password length must be greater than the sum of all the minimums.",
+				Description: "Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. The length of the generated secret. Note that the length of the value must be greater than the sum of all the minimums.",
 				Computed:    true,
 				Optional:    true,
 				Default:     int64default.StaticInt64(64),
