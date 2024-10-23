@@ -266,7 +266,7 @@ func (s *secretResource) Create(ctx context.Context, req resource.CreateRequest,
 		generatedValue, err := createSecretValue(&plan, s.bitwardenClient)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				"Error generating password",
+				"Error generating secret value",
 				err.Error(),
 			)
 			return
