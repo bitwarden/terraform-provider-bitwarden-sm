@@ -152,7 +152,7 @@ func (s *secretResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 				},
 			},
 			"uppercase": schema.BoolAttribute{
-				Description: "Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. Configures the password generator to include uppercase characters (A-Z).",
+				Description: "Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. Configures the secret generator to include uppercase characters (A-Z).",
 				Computed:    true,
 				Optional:    true,
 				Default:     booldefault.StaticBool(true),
