@@ -161,10 +161,10 @@ func TestAccResourceSecretCreateSecretWithCustomGeneratorConfig(t *testing.T) {
 	config.key = types.StringValue(secretKey)
 	config.note = types.StringValue(secretNote)
 	config.projectId = types.StringValue(project.ID)
-	config.length = types.Int64Value(15)
-	config.minLowercase = types.Int64Value(4)
-	config.minUppercase = types.Int64Value(4)
-	config.minNumber = types.Int64Value(4)
+	config.length = types.Int64Value(27)
+	config.minLowercase = types.Int64Value(9)
+	config.minUppercase = types.Int64Value(9)
+	config.minNumber = types.Int64Value(9)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -186,12 +186,12 @@ func TestAccResourceSecretCreateSecretWithCustomGeneratorConfig(t *testing.T) {
 						attributes := rs.Primary.Attributes
 
 						if attributes["avoid_ambiguous"] != "false" ||
-							attributes["length"] != "15" ||
+							attributes["length"] != "27" ||
 							attributes["lowercase"] != "true" ||
-							attributes["min_lowercase"] != "4" ||
-							attributes["min_number"] != "4" ||
+							attributes["min_lowercase"] != "9" ||
+							attributes["min_number"] != "9" ||
 							attributes["min_special"] != "1" ||
-							attributes["min_uppercase"] != "4" ||
+							attributes["min_uppercase"] != "9" ||
 							attributes["numbers"] != "true" ||
 							attributes["special"] != "false" ||
 							attributes["uppercase"] != "true" {
@@ -225,6 +225,61 @@ func TestAccResourceSecretCreateSecretWithCustomGeneratorConfig(t *testing.T) {
 						return nil
 					},
 				),
+			},
+		},
+		CheckDestroy: func(state *terraform.State) error {
+			_, cleanUpErr := bitwardenClient.Projects().Delete([]string{project.ID})
+			if cleanUpErr != nil {
+				t.Fatalf("Error cleaning up test project: %s", cleanUpErr.Error())
+			}
+			return nil
+		},
+	})
+}
+
+func TestAccResourceSecretCreateSecretWithInvalidGeneratorConfigExpectError(t *testing.T) {
+	secretKey := "Test-Secret-" + generateRandomString()
+	secretNote := generateRandomString()
+	projectName := "Test-Project-" + generateRandomString()
+
+	bitwardenClient, organizationId, err := newBitwardenClient()
+
+	if err != nil {
+		t.Fatalf("Error creating bitwardenClient: %s", err)
+	}
+
+	project, preCheckError := bitwardenClient.Projects().Create(organizationId, projectName)
+	if preCheckError != nil {
+		t.Fatal("Error creating test project for provider validation.")
+	}
+
+	config := SecretResourceConfig{}
+	config.key = types.StringValue(secretKey)
+	config.note = types.StringValue(secretNote)
+	config.projectId = types.StringValue(project.ID)
+	config.minLowercase = types.Int64Value(10)
+
+	config2 := SecretResourceConfig{}
+	config2.key = types.StringValue(secretKey)
+	config2.note = types.StringValue(secretNote)
+	config2.projectId = types.StringValue(project.ID)
+	config2.minLowercase = types.Int64Value(9)
+	config2.minUppercase = types.Int64Value(9)
+	config2.minNumber = types.Int64Value(9)
+	config2.length = types.Int64Value(26)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: buildProviderConfigFromEnvFile(t) +
+					buildSecretResourceConfig(config),
+				ExpectError: regexp.MustCompile("Attribute min_lowercase value must be between 1 and 9, got: 10"),
+			},
+			{
+				Config: buildProviderConfigFromEnvFile(t) +
+					buildSecretResourceConfig(config2),
+				ExpectError: regexp.MustCompile("Attribute length value must be at least sum of min_lowercase"),
 			},
 		},
 		CheckDestroy: func(state *terraform.State) error {

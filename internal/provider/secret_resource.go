@@ -3,6 +3,7 @@ package provider
 import (
 	"fmt"
 	"github.com/bitwarden/sdk-go"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -127,7 +128,12 @@ func (s *secretResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 				Optional:    true,
 				Default:     int64default.StaticInt64(64),
 				Validators: []validator.Int64{
-					AtLeastSumOf("min_lowercase", "min_uppercase", "min_number", "min_special"),
+					int64validator.AtLeastSumOf(path.Expressions{
+						path.MatchRoot("min_lowercase"),
+						path.MatchRoot("min_uppercase"),
+						path.MatchRoot("min_number"),
+						path.MatchRoot("min_special"),
+					}...),
 				},
 			},
 			"lowercase": schema.BoolAttribute{
@@ -142,7 +148,7 @@ func (s *secretResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 				Optional:    true,
 				Default:     int64default.StaticInt64(1),
 				Validators: []validator.Int64{
-					ConditionalMin("lowercase", "min_lowercase"),
+					int64validator.Between(1, 9),
 				},
 			},
 			"uppercase": schema.BoolAttribute{
@@ -157,7 +163,7 @@ func (s *secretResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 				Optional:    true,
 				Default:     int64default.StaticInt64(1),
 				Validators: []validator.Int64{
-					ConditionalMin("uppercase", "min_uppercase"),
+					int64validator.Between(1, 9),
 				},
 			},
 			"numbers": schema.BoolAttribute{
@@ -172,7 +178,7 @@ func (s *secretResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 				Optional:    true,
 				Default:     int64default.StaticInt64(1),
 				Validators: []validator.Int64{
-					ConditionalMin("numbers", "min_number"),
+					int64validator.Between(1, 9),
 				},
 			},
 			"special": schema.BoolAttribute{
@@ -187,7 +193,7 @@ func (s *secretResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 				Optional:    true,
 				Default:     int64default.StaticInt64(1),
 				Validators: []validator.Int64{
-					ConditionalMin("special", "min_special"),
+					int64validator.Between(1, 9),
 				},
 			},
 		},
