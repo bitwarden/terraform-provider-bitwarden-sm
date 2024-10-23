@@ -167,7 +167,7 @@ func (s *secretResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 				},
 			},
 			"numbers": schema.BoolAttribute{
-				Description: "Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. Configures the password generator to include numbers (0-9)",
+				Description: "Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. Configures the secret generator to include numbers (0-9)",
 				Computed:    true,
 				Optional:    true,
 				Default:     booldefault.StaticBool(true),
