@@ -102,17 +102,17 @@ EOF
 ### Optional
 
 - `avoid_ambiguous` (Boolean) Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. When set to true, the generated secret will not contain ambiguous characters. The ambiguous characters are: I, O, l, 0, 1.
-- `length` (Number) Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. The length of the generated secret. Note that the password length must be greater than the sum of all the minimums.
-- `lowercase` (Boolean) Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. Configures the password generator to include lowercase characters (a-z).
+- `length` (Number) Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. The length of the generated secret. Note that the length of the value must be greater than the sum of all the minimums.
+- `lowercase` (Boolean) Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. Configures the secret generator to include lowercase characters (a-z).
 - `min_lowercase` (Number) Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. Configures the minimum number of lowercase characters in the generated secret. When set, the value must be between 1 and 9. This value is ignored if lowercase is false.
 - `min_number` (Number) Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. Configures the minimum number of numbers in the generated secret. When set, the value must be between 1 and 9. This value is ignored if numbers is false.
 - `min_special` (Number) Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. Configures the minimum number of special characters in the generated secret. When set, the value must be between 1 and 9. This value is ignored if special is false.
 - `min_uppercase` (Number) Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. Configures the minimum number of uppercase characters in the generated secret. When set, the value must be between 1 and 9. This value is ignored if uppercase is false.
 - `note` (String) String representation of the `note` of the secret inside Bitwarden Secrets Manager.
-- `numbers` (Boolean) Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. Configures the password generator to include numbers (0-9)
+- `numbers` (Boolean) Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. Configures the secret generator to include numbers (0-9)
 - `project_id` (String) String representation of the `ID` of the project to which the secret belongs. If the used machine account has no read access to this project, access will not be granted.
-- `special` (Boolean) Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. Configures the password generator to include special characters: ! @ # $ % ^ & *.
-- `uppercase` (Boolean) Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. Configures the password generator to include uppercase characters (A-Z).
+- `special` (Boolean) Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. Configures the secret generator to include special characters: ! @ # $ % ^ & *.
+- `uppercase` (Boolean) Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. Configures the secret generator to include uppercase characters (A-Z).
 - `value` (String, Sensitive) String representation of the `value` of the secret inside Bitwarden Secrets Manager. This attribute is sensitive. The Dynamic Secrets feature enables compatibility with secret `value` changes in Bitwarden Secrets Manager without changes to the terraform plan.
 
 ### Read-Only
