@@ -182,7 +182,7 @@ func (s *secretResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 				},
 			},
 			"special": schema.BoolAttribute{
-				Description: "Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. Configures the password generator to include special characters: ! @ # $ % ^ & *.",
+				Description: "Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. Configures the secret generator to include special characters: ! @ # $ % ^ & *.",
 				Computed:    true,
 				Optional:    true,
 				Default:     booldefault.StaticBool(false),
