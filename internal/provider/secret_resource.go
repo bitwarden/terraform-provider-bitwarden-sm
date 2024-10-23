@@ -137,7 +137,7 @@ func (s *secretResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 				},
 			},
 			"lowercase": schema.BoolAttribute{
-				Description: "Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. Configures the password generator to include lowercase characters (a-z).",
+				Description: "Ignored if value is provided explicitly or secret is updated dynamically in Bitwarden Secrets Manager. Configures the secret generator to include lowercase characters (a-z).",
 				Computed:    true,
 				Optional:    true,
 				Default:     booldefault.StaticBool(true),
