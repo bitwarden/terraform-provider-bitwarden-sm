@@ -33,10 +33,18 @@ The `secret` **resource** is the right terraform object to create and manipulate
 It implements the co-ownership of secrets stored in Bitwarden Secrets Manager.
 Its specific documentation and examples can be found here: [`secret.md`](./resource/secret.md).
 
+### Secrets Generator
+
+It is suggested to prevent providing secret `values` in clear text in the terraform configuration.
+To improve the usability of the provider, this feature supports the secure generation of a secret `value` if no explicit value has been provided in the terraform configuration.
+It uses the secret generator algorithms of the underlying [Bitwarden Go SDK](https://github.com/bitwarden/sdk-go).
+The generation of secret `values` can be influenced by a set of parameters.
+Specific documentation and examples can be found here: [`secret.md`](./resource/secret.md).
+
 #### Dynamic Secrets
 
 This feature supports secret `value` updates in Bitwarden Secrets Manager without requiring manual updates in Terraform configurations.
-Provided that no explicit secret `value` has been provided, changes to the secret `value` in Bitwarden Secrets Manager will get imported by the provider.
+Provided that no explicit secret `value` has been provided in the terraform configuration, changes to the secret `value` in Bitwarden Secrets Manager will get imported by the provider.
 Terraform resources which are consuming the secret will get updated accordingly, following their specific implementations.
 
 ### Importing an existing Secret into Terraform State
