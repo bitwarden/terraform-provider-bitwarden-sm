@@ -3,6 +3,3 @@
 # Sort lines alphabetically within these groups to avoid accidentally adding duplicates.
 #
 # https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
-
-# Default file owners
-* @bitwarden/team-secrets-manager-dev
