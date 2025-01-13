@@ -62,7 +62,7 @@ jobs:
           ref: ${{  github.event.pull_request.head.sha }}
 
       - name: Scan with SonarCloud
-        uses: sonarsource/sonarcloud-github-action@e44258b109568baa0df60ed515909fc6c72cba92 # v2.3.0
+        uses: sonarsource/sonarqube-scan-action@bfd4e558cda28cda6b5defafb9232d191be8c203 # v4.2.1
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
