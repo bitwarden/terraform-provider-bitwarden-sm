@@ -35,12 +35,14 @@ jobs:
             dependencies: musl-tools
           - os: ubuntu-22.04
             arch: arm64
+            # According to linter: warning Workflow => .github/workflows/build.yml:38:21: label "Terraform-provider-bitwarden-sm-linux" is unknown.
             runner: Terraform-provider-bitwarden-sm-linux
             build_target: build-linux-arm64
             verify-target: verify-binary-linux
             dependencies: musl-tools
           - os: darwin
             arch: amd64
+            # According to linter: label "macos-14" is unknown
             runner: macos-14
             build_target: build-darwin-amd64
             verify_target: verify-binary-darwin-amd64
@@ -106,13 +108,13 @@ jobs:
           echo "module_name=${MODULE_NAME}" >> "$GITHUB_OUTPUT"
           echo "version=${BINARY_VERSION}" >> "$GITHUB_OUTPUT"
 
-          echo "binary_version=${BINARY_VERSION}" >> "$GITHUB_ENV"
-          echo "archive=${ARCHIVE}" >> "$GITHUB_ENV"
+          echo "binary_version=${BINARY_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "archive=${ARCHIVE}" >> "$GITHUB_OUTPUT"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
         with:
-          name: ${{ env.module_name }}_${{ env.binary_version }}_${{ matrix.os }}_${{ matrix.arch }}
+          name: ${{ steps.prepare-release.outputs.module_name }}_${{ steps.prepare-release.outputs.binary_version }}_${{ matrix.os }}_${{ matrix.arch }}
           retention-days: 5
           path: |
-            ${{ env.archive }}
+            ${{ steps.prepare-release.outputs.archive }}

@@ -1,4 +1,4 @@
-name: Scan
+name: Docs
 
 on:
   pull_request:
