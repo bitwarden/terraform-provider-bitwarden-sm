@@ -10,11 +10,53 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
 
-      - name: Release
-        uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191 # v2.0.8
+      - name: Check out repo
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Get current version
+        id: current-version
+        run: |
+          CURRENT_VERSION=$(grep 'ProviderVersion string =' version/version.go | sed -E 's/.*"([0-9]+\.[0-9]+\.[0-9]+(-pre)?)".*/\1/')
+          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
         with:
-          files: |
-            release/*.zip
-            terraform-registry-manifest.json
-            release/${{ needs.build-artifact.outputs.module_name }}_${{ needs.build-artifact.outputs.version }}_SHA256SUMS
-#            release/${{ needs.build-artifact.outputs.module_name }}_${{ needs.build-artifact.outputs.version }}_SHA256SUMS.sig
+          path: "/artifacts"
+          pattern: "*_${{ steps.current-version.outputs.version }}_*.zip"
+          merge-multiple: true
+
+      - name: Generate Checksum File
+        id: checksum
+        run: |
+          MODULE_NAME=$(grep "^module" go.mod | awk -F'/' '{print $NF}')
+          CHECKSUM_FILE="${MODULE_NAME}_${{ steps.current-version.outputs.version }}_SHA256SUMS"
+          shasum -a 256 /artifacts/*.zip > $CHECKSUM_FILE
+          echo "module_name=$MODULE_NAME" >> $GITHUB_OUTPUT
+          echo "checksum_file=$CHECKSUM_FILE" >> $GITHUB_OUTPUT
+
+      - name: Import GPG Key
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+        run: |
+          echo "$GPG_PRIVATE_KEY" | base64 --decode | gpg --import
+
+      - name: Sign Checksum File
+        run: |
+          gpg --detach-sign --local-user ${{ secrets.GPG_KEY_ID }} --output ${{ steps.checksum.outputs.checksum_file }}.sig ${{ steps.checksum.outputs.checksum_file }}
+
+      - name: Prepare Manifest File
+        id: manifest
+        run: |
+          MANIFEST_FILE="${{ steps.checksum.outputs.module_name}}_${{ steps.current-version.outputs.version }}_manifest.json"
+          cp terraform-registry-manifest.json $MANIFEST_FILE
+          echo "manifest_file=$MANIFEST_FILE" >> $GITHUB_OUTPUT
+
+      - name: Release
+        uses: ncipollo/release-action@cdcc88a9acf3ca41c16c37bb7d21b9ad48560d87 # v1.15.0
+        with:
+          name: "${{ steps.current-version.outputs.version }}"
+          artifacts: "artifacts/*.zip,
+              ${{ steps.manifest.outputs.manifest_file }},
+              ${{ steps.checksum.outputs.checksum_file }},
+              ${{ steps.checksum.outputs.checksum_file }}.sig"

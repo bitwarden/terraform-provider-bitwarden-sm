@@ -66,10 +66,10 @@ jobs:
       - name: Get current version
         id: current-version
         run: |
-          CURRENT_VERSION=$(grep 'ProviderVersion string =' version/version.go | sed -E "s/.*\"([^\"]+)\".*/\\1/")
+          CURRENT_VERSION=$(grep 'ProviderVersion string =' version/version.go | sed -E 's/.*"([0-9]+\.[0-9]+\.[0-9]+(-pre)?)".*/\1/')
           echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
 
-      - name: Verify input version
+      - name: Verify and set input version
         if: ${{ inputs.version_number_override != '' }}
         env:
           CURRENT_VERSION: ${{ steps.current-version.outputs.version }}
@@ -90,30 +90,53 @@ jobs:
             exit 1
           fi
 
+          if [[ "$RELEASE_TYPE" == "pre-release" ]]; then
+            NEW_VERSION="$NEW_VERSION-pre"
+          fi
+
+          echo "New version is $NEW_VERSION"
+          echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+
       - name: Calculate next release version
         if: ${{ inputs.version_number_override == '' }}
         id: calculate-next-version
         env:
           CURRENT_VERSION: ${{ steps.current-version.outputs.version }}
+          RELEASE_TYPE: ${{ inputs.release_type }}
+          VERSION_BUMP: ${{ inputs.version_bump }}
         run: |
-          CURRENT_VERSION="${{ steps.query-version.outputs.current_version }}"
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
+          CURRENT_VERSION="${{ steps.current-version.outputs.version }}"
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$(echo "$CURRENT_VERSION" | sed 's/-pre//')"
 
-          case "${{ github.event.inputs.version_bump }}" in
-            major)
-              MAJOR=$((MAJOR + 1))
-              MINOR=0
-              PATCH=0
-              ;;
-            minor)
-              MINOR=$((MINOR + 1))
-              PATCH=0
-              ;;
-            patch)
-              PATCH=$((PATCH + 1))
-              ;;
-          esac
+          if [[ "$RELEASE_TYPE" == "release" && "$CURRENT_VERSION" =~ -pre$ ]]; then
+            NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+          else
+            case "$VERSION_BUMP" in
+              major)
+                MAJOR=$((MAJOR + 1))
+                MINOR=0
+                PATCH=0
+                ;;
+              minor)
+                MINOR=$((MINOR + 1))
+                PATCH=0
+                ;;
+              patch)
+                PATCH=$((PATCH + 1))
+                ;;
+            esac
+            NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+          fi
 
-          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
           echo "New version is $NEW_VERSION"
-          echo "::set-output name=new_version::$NEW_VERSION"
+          echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Update provider version in version.go
+        run: |
+          sed -i "s/ProviderVersion = \".*\"/ProviderVersion = \"$NEW_VERSION\"/" version/version.go
+
+      - name: Commit and push version update
+        run: |
+          git add version/version.go
+          git commit -m "Update provider version to $NEW_VERSION"
+          git push origin main
