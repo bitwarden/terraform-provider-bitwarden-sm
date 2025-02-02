@@ -1,10 +1,12 @@
 name: Build
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - "main"
-  pull_request:
+  pull_request_target:
+    types: [opened, synchronize]
 
 jobs:
 
@@ -103,7 +105,6 @@ jobs:
           echo "module_name=${MODULE_NAME}" >> "$GITHUB_OUTPUT"
           echo "version=${BINARY_VERSION}" >> "$GITHUB_OUTPUT"
 
-          echo "module_name=${MODULE_NAME}" >> "$GITHUB_ENV"
           echo "binary_version=${BINARY_VERSION}" >> "$GITHUB_ENV"
           echo "archive=${ARCHIVE}" >> "$GITHUB_ENV"
 

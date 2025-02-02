@@ -1,10 +1,12 @@
 name: Scan
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - "main"
-  pull_request:
+  pull_request_target:
+    types: [opened, synchronize]
 
 jobs:
   docs:

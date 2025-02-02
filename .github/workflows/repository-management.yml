@@ -1,0 +1,119 @@
+name: Repository management
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release type'
+        default: "pre-release"
+        required: true
+        type: choice
+        options:
+          - "pre-release"
+          - "release"
+      version_bump:
+        description: 'Version bump type'
+        default: "patch"
+        required: true
+        type: choice
+        options:
+          - "major"
+          - "minor"
+          - "patch"
+      version_number_override:
+        description: "New version override (leave blank for automatic calculation, example: '1.2.3')"
+        required: false
+        type: string
+
+jobs:
+  bump_version:
+    name: Bump Version
+    if: ${{ always() }}
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Validate version input format
+        if: ${{ inputs.version_number_override != '' }}
+        env:
+          NEW_VERSION: ${{ inputs.version_number_override }}
+        run: |
+          SEMVER_REGEX="^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-pre)?$"
+
+          if [[ NEW_VERSION =~ $SEMVER_REGEX ]]; then
+            echo "NEW_VERSION is a valid semantic version."
+          else
+            echo "NEW_VERSION is not a valid semantic version."
+            exit 1
+          fi
+
+      - name: Generate GH App token
+        uses: actions/create-github-app-token@5d869da34e18e7287c1daad50e0b8ea0f506ce69 # v1.11.0
+        id: app-token
+        with:
+          app-id: ${{ secrets.BW_GHAPP_ID }}
+          private-key: ${{ secrets.BW_GHAPP_KEY }}
+
+      - name: Check out branch
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: main
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Configure Git
+        run: |
+          git config --local user.email "actions@github.com"
+          git config --local user.name "Github Actions"
+
+      - name: Get current version
+        id: current-version
+        run: |
+          CURRENT_VERSION=$(grep 'ProviderVersion string =' version/version.go | sed -E "s/.*\"([^\"]+)\".*/\\1/")
+          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Verify input version
+        if: ${{ inputs.version_number_override != '' }}
+        env:
+          CURRENT_VERSION: ${{ steps.current-version.outputs.version }}
+          NEW_VERSION: ${{ inputs.version_number_override }}
+        run: |
+          # Error if version has not changed.
+          if [[ "$NEW_VERSION" == "$CURRENT_VERSION" ]]; then
+            echo "Specified override version is the same as the current version." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+          # Check if version is newer.
+          printf '%s\n' "${CURRENT_VERSION}" "${NEW_VERSION}" | sort -C -V
+          if [ $? -eq 0 ]; then
+            echo "Version is newer than the current version."
+          else
+            echo "Version is older than the current version." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+      - name: Calculate next release version
+        if: ${{ inputs.version_number_override == '' }}
+        id: calculate-next-version
+        env:
+          CURRENT_VERSION: ${{ steps.current-version.outputs.version }}
+        run: |
+          CURRENT_VERSION="${{ steps.query-version.outputs.current_version }}"
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
+
+          case "${{ github.event.inputs.version_bump }}" in
+            major)
+              MAJOR=$((MAJOR + 1))
+              MINOR=0
+              PATCH=0
+              ;;
+            minor)
+              MINOR=$((MINOR + 1))
+              PATCH=0
+              ;;
+            patch)
+              PATCH=$((PATCH + 1))
+              ;;
+          esac
+
+          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+          echo "New version is $NEW_VERSION"
+          echo "::set-output name=new_version::$NEW_VERSION"
