@@ -37,7 +37,7 @@ jobs:
 
       - name: Generate documentation
         run: |
-          make create-docs-linux PARAM_CC="gcc" PARAM_CGO_LDFLAGS="'-s -w'"
+          make create-docs-linux PARAM_CC="gcc" PARAM_CGO_LDFLAGS="'-s -w -lm'"
 
       - name: Git diff
         run: |
