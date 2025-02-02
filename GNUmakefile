@@ -40,7 +40,7 @@ set-env-windows: set-env
 .PHONY: create-docs-linux
 create-docs-linux: set-env-linux
 	terraform fmt -recursive ./examples/
-	CGO_ENABLED=0 go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate
+	go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate
 
 # Build a static linux binary
 .PHONY: build-linux
