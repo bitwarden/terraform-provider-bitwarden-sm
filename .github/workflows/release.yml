@@ -26,6 +26,14 @@ jobs:
           pattern: "*_${{ steps.current-version.outputs.version }}_*.zip"
           merge-multiple: true
 
+      - name: Download Artifacts
+        uses: bitwarden/gh-actions/download-artifacts@main
+        with:
+          workflow: build.yml
+          workflow_conclusion: success
+          branch: main
+          path: /artifacts
+
       - name: Generate Checksum File
         id: checksum
         run: |
@@ -56,6 +64,7 @@ jobs:
         uses: ncipollo/release-action@cdcc88a9acf3ca41c16c37bb7d21b9ad48560d87 # v1.15.0
         with:
           name: "${{ steps.current-version.outputs.version }}"
+          generateReleaseNotes: true
           artifacts: "artifacts/*.zip,
               ${{ steps.manifest.outputs.manifest_file }},
               ${{ steps.checksum.outputs.checksum_file }},
