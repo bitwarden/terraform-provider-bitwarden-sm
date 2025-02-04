@@ -11,14 +11,9 @@ on:
 
 jobs:
 
-  check-run:
-    name: Check PR run
-    uses: bitwarden/gh-actions/.github/workflows/check-run.yml@main
-
   build-artifact:
     name: Build and verify artifact
     runs-on: ${{ matrix.runner }}
-    needs: check-run
     outputs:
       module_name: ${{ steps.prepare-release.outputs.module_name }}
       version: ${{ steps.prepare-release.outputs.version }}
