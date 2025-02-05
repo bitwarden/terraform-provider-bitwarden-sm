@@ -10,7 +10,7 @@ description: |-
 
 The `secret` data source fetches a particular secret from Bitwarden Secrets Manager based on a given `ID`.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "bitwarden-sm_secret" "secret" {

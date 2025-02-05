@@ -10,7 +10,7 @@ description: |-
 
 The `projects` data source fetches all projects accessible by the used machine account.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "bitwarden-sm_projects" "projects" {}

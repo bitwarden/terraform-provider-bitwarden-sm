@@ -9,22 +9,41 @@ The purpose of this Terraform Provider is to streamline the process of using Bit
 - [Terraform](https://developer.hashicorp.com/terraform/downloads) >= 1.5
 - [Go](https://golang.org/doc/install) >= 1.23.0
 
-## Developing the Provider
+## Developing the provider
 
 If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (see [Requirements](#requirements) above).
 
-### Building The Provider
+### Building the provider
+
+#### Local development
 
 1. Clone the repository
 2. Enter the repository directory
-3. Build the provider using the Go `install` command:
+3. Execute `go mod tidy` to install all dependencies
+4. Build the provider using the Go `install` command:
+    ```shell
+    go install .
+    ```
 
-```shell
-go install .
-```
-This will build the provider and put the provider binary in the `$GOPATH/bin` directory.
+This will build a dynamically linked binary for the provider and puts it in the `$GOPATH/bin` directory.
 
-### Development Overrides
+#### CGO and statically linked binaries
+
+This provider is using the official [`sdk-go`](https://github.com/bitwarden/sdk-go) from [Bitwarden](https://github.com/bitwarden).
+This dependency utilizes `CGO`.
+In order to build a statically linked binary for linux, the following build configuration is necessary:
+
+1. The library `musl-tools` needs to be available on the system
+2. The following environment variables need to be set:
+    ```bash
+    go env -w CGO_ENABLED="1"
+    go env -w CC="musl-gcc"
+    go env -w CGO_LDFLAGS="-static -Wl,-unresolved-symbols=ignore-all"
+    ```
+   
+Using this configuration, `go install .` and `go build` should generate statically linked binaries.
+
+### Development overrides
 
 In order to tell `terraform` to use the local build of the provider, add a `dev_override`.
 Therefore, create or open the file `~/.terraformrc` and add an entry for the `bitwarden-sm` provider:
@@ -43,7 +62,7 @@ provider_installation {
 }
 ```
 
-### Creating Documentation
+### Creating documentation
 
 The usage documentation of the provider can be found inside the [`/docs`](./docs) folder.
 This documentation is partly generated automatically from the source code and partly written by hand.
@@ -63,7 +82,7 @@ To generate or update documentation, run `go generate`.
 //go:generate go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate
 ```
 
-### Adding Dependencies
+### Adding dependencies
 
 This provider uses [Go modules](https://github.com/golang/go/wiki/Modules).
 Please see the Go documentation for the most up-to-date information about using Go modules.

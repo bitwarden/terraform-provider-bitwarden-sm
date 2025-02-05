@@ -1,0 +1,45 @@
+name: Docs
+
+on:
+  pull_request:
+    branches:
+      - "main"
+    types: [ opened, synchronize ]
+
+jobs:
+  docs:
+    name: Validate Docs
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    steps:
+
+      - name: Check out repo
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Setup Go
+        uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+
+      - name: Install Go dependencies
+        run: go mod tidy
+
+      - name: Install build dependencies
+        run: sudo apt update && sudo apt install gcc libc-dev -y
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@651471c36a6092792c552e8b1bef71e592b462d8 # v3.1.1
+        with:
+          terraform_version: '1.9.2'
+          terraform_wrapper: false
+
+      - name: Generate documentation
+        run: |
+          make create-docs-linux PARAM_CC="gcc" PARAM_CGO_LDFLAGS="'-s -w -lm'"
+
+      - name: Git diff
+        run: |
+          git diff --compact-summary --exit-code examples docs || \
+            (echo; echo "Unexpected difference in directories [/examples, /docs] after code generation. Run 'go generate ./...' command and commit."; exit 1)

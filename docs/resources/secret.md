@@ -10,7 +10,7 @@ description: |-
 
 The `secret` resource manages secrets in Bitwarden Secrets Manager.
 
-## Example Usage
+## Example usage
 
 ```terraform
 resource "bitwarden-sm_secret" "db_admin_secret" {
