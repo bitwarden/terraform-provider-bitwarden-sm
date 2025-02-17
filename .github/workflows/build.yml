@@ -8,7 +8,8 @@ on:
     branches:
       - "main"
     types: [ opened, synchronize ]
-
+  workflow_dispatch:
+  
 jobs:
 
   build-artifact:
