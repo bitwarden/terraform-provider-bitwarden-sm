@@ -25,14 +25,14 @@ jobs:
           workflow: build.yml
           workflow_conclusion: success
           branch: main
-          path: /artifacts
+          path: artifacts
 
       - name: Generate Checksum File
         id: checksum
         run: |
           MODULE_NAME=$(grep "^module" go.mod | awk -F'/' '{print $NF}')
           CHECKSUM_FILE="${MODULE_NAME}_${{ steps.current-version.outputs.version }}_SHA256SUMS"
-          shasum -a 256 /artifacts/*.zip > $CHECKSUM_FILE
+          shasum -a 256 artifacts/*.zip > $CHECKSUM_FILE
           echo "module_name=$MODULE_NAME" >> $GITHUB_OUTPUT
           echo "checksum_file=$CHECKSUM_FILE" >> $GITHUB_OUTPUT
 
