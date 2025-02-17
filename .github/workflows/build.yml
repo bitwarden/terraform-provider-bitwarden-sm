@@ -117,6 +117,5 @@ jobs:
         uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
           name: ${{ steps.prepare-release.outputs.module_name }}_${{ steps.prepare-release.outputs.binary_version }}_${{ matrix.os }}_${{ matrix.arch }}
-          retention-days: 5
           path: |
             ${{ steps.prepare-release.outputs.archive }}
