@@ -43,6 +43,7 @@ jobs:
 
       - name: Sign Checksum File
         run: |
+          export GPG_TTY=$(tty)
           gpg --detach-sign --local-user ${{ secrets.GPG_KEY_ID }} --output ${{ steps.checksum.outputs.checksum_file }}.sig ${{ steps.checksum.outputs.checksum_file }}
 
       - name: Prepare Manifest File
