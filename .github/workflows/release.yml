@@ -44,8 +44,9 @@ jobs:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
 
       - name: Sign Checksum File
+        env:
+          GPG_TTY: ${{ runner.os }}-pty
         run: |
-          export GPG_TTY=$(tty)
           gpg --detach-sign --local-user ${{ secrets.GPG_KEY_ID }} --output ${{ steps.checksum.outputs.checksum_file }}.sig ${{ steps.checksum.outputs.checksum_file }}
 
       - name: Prepare Manifest File
