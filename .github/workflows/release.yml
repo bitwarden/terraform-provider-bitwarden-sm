@@ -36,6 +36,8 @@ jobs:
           echo "module_name=$MODULE_NAME" >> $GITHUB_OUTPUT
           echo "checksum_file=$CHECKSUM_FILE" >> $GITHUB_OUTPUT
 
+          ls -la
+
       - name: Import GPG key
         uses: crazy-max/ghaction-import-gpg@cb9bde2e2525e640591a934b1fd28eef1dcaf5e5 # v6.2.0
         with:
@@ -53,12 +55,12 @@ jobs:
           cp terraform-registry-manifest.json $MANIFEST_FILE
           echo "manifest_file=$MANIFEST_FILE" >> $GITHUB_OUTPUT
 
-      - name: Release
-        uses: ncipollo/release-action@cdcc88a9acf3ca41c16c37bb7d21b9ad48560d87 # v1.15.0
-        with:
-          name: "${{ steps.current-version.outputs.version }}"
-          generateReleaseNotes: true
-          artifacts: "artifacts/*.zip,
-              ${{ steps.manifest.outputs.manifest_file }},
-              ${{ steps.checksum.outputs.checksum_file }},
-              ${{ steps.checksum.outputs.checksum_file }}.sig"
+      # - name: Release
+      #   uses: ncipollo/release-action@cdcc88a9acf3ca41c16c37bb7d21b9ad48560d87 # v1.15.0
+      #   with:
+      #     name: "${{ steps.current-version.outputs.version }}"
+      #     generateReleaseNotes: true
+      #     artifacts: "artifacts/*.zip,
+      #         ${{ steps.manifest.outputs.manifest_file }},
+      #         ${{ steps.checksum.outputs.checksum_file }},
+      #         ${{ steps.checksum.outputs.checksum_file }}.sig"
