@@ -16,7 +16,7 @@ jobs:
       - name: Get current version
         id: current-version
         run: |
-          CURRENT_VERSION=$(grep 'ProviderVersion string =' version/version.go | sed -E 's/.*"([0-9]+\.[0-9]+\.[0-9]+(-pre)?)".*/\1/')
+          CURRENT_VERSION=$(grep 'ProviderVersion =' version/version.go | sed -E 's/.*"([0-9]+\.[0-9]+\.[0-9]+(-pre)?)".*/\1/')
           echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
 
       - name: Download Artifacts
