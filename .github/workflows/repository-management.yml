@@ -66,7 +66,7 @@ jobs:
       - name: Get current version
         id: current-version
         run: |
-          CURRENT_VERSION=$(grep 'ProviderVersion string =' version/version.go | sed -E 's/.*"([0-9]+\.[0-9]+\.[0-9]+(-pre)?)".*/\1/')
+          CURRENT_VERSION=$(grep 'ProviderVersion =' version/version.go | sed -E 's/.*"([0-9]+\.[0-9]+\.[0-9]+(-pre)?)".*/\1/')
           echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
 
       - name: Verify and set input version
@@ -126,6 +126,10 @@ jobs:
                 ;;
             esac
             NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+
+            if [[ "$RELEASE_TYPE" == "pre-release" ]]; then
+              NEW_VERSION="$NEW_VERSION-pre"
+            fi
           fi
 
           echo "New version is $NEW_VERSION"
