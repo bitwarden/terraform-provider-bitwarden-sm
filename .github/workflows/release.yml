@@ -26,13 +26,14 @@ jobs:
           workflow_conclusion: success
           branch: main
           path: artifacts
+          skip_unpack: true
 
       - name: Generate Checksum File
         id: checksum
         run: |
           MODULE_NAME=$(grep "^module" go.mod | awk -F'/' '{print $NF}')
           CHECKSUM_FILE="${MODULE_NAME}_${{ steps.current-version.outputs.version }}_SHA256SUMS"
-          shasum -a 256 artifacts/*.zip > $CHECKSUM_FILE
+          shasum -a 256 artifacts/*.zip | sed 's|artifacts/||' > "$CHECKSUM_FILE"
           echo "module_name=$MODULE_NAME" >> $GITHUB_OUTPUT
           echo "checksum_file=$CHECKSUM_FILE" >> $GITHUB_OUTPUT
 
@@ -42,16 +43,17 @@ jobs:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
-      - name: Sign Checksum File
-        run: |
-          gpg --detach-sign --local-user ${{ secrets.GPG_KEY_ID }} --output ${{ steps.checksum.outputs.checksum_file }}.sig ${{ steps.checksum.outputs.checksum_file }}
-
       - name: Prepare Manifest File
         id: manifest
         run: |
           MANIFEST_FILE="${{ steps.checksum.outputs.module_name}}_${{ steps.current-version.outputs.version }}_manifest.json"
           cp terraform-registry-manifest.json $MANIFEST_FILE
+          shasum -a 256 $MANIFEST_FILE >> ${{ steps.checksum.outputs.checksum_file }}
           echo "manifest_file=$MANIFEST_FILE" >> $GITHUB_OUTPUT
+
+      - name: Sign Checksum File
+        run: |
+          gpg --detach-sign --local-user ${{ secrets.GPG_KEY_ID }} --output ${{ steps.checksum.outputs.checksum_file }}.sig ${{ steps.checksum.outputs.checksum_file }}
 
       - name: Release
         uses: ncipollo/release-action@cdcc88a9acf3ca41c16c37bb7d21b9ad48560d87 # v1.15.0
