@@ -136,13 +136,13 @@ jobs:
           echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Update provider version in version.go
-        with:
+        env:
           NEW_VERSION: ${{ steps.calculate-next-version.outputs.new_version }}
         run: |
           sed -i "s/ProviderVersion = \".*\"/ProviderVersion = \"$NEW_VERSION\"/" version/version.go
 
       - name: Commit and push version update
-        with:
+        env:
           NEW_VERSION: ${{ steps.calculate-next-version.outputs.new_version }}
         run: |
           git add version/version.go
