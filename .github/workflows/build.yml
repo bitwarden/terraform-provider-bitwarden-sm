@@ -35,7 +35,7 @@ jobs:
             runner: terraform-provider-bitwarden-sm-linux
             build_target: build-linux-arm-v6
             verify-target: verify-binary-linux
-            dependencies: musl-tools
+            dependencies: musl-tools gcc-arm-linux-gnueabihf
           - os: linux
             arch: arm64
             # According to linter: warning Workflow => .github/workflows/build.yml:38:21: label "terraform-provider-bitwarden-sm-linux" is unknown.
