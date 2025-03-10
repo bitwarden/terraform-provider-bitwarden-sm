@@ -55,7 +55,7 @@ build-linux-amd64:
 # Build statically binary for linux arm (ARMv6)
 .PHONY: build-linux-arm-v6
 build-linux-arm-v6:
-	$(MAKE) PARAM_GOARM="6" PARAM_GOARCH="arm" build-linux
+	$(MAKE) CC="arm-linux-gnueabi-gcc" PARAM_GOARM="6" PARAM_GOARCH="arm" build-linux
 
 # Build statically binary for linux arm64 (ARMv8)
 .PHONY: build-linux-arm64
