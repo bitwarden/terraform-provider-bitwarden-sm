@@ -13,7 +13,7 @@ BINARY_VERSION ?= ''
 PARAM_CC ?= musl-gcc
 PARAM_GOOS ?= linux
 PARAM_GOARCH ?= amd64
-PARAM_CGO_ENABLED ?= 1
+PARAM_CGO_ENABLED ?= 0
 PARAM_CGO_LDFLAGS ?= '-s -w -static -Wl,-unresolved-symbols=ignore-all'
 PARAM_VERIFY ?= 'statically linked'
 
@@ -55,7 +55,7 @@ build-linux-amd64:
 # Build statically binary for linux arm (ARMv6)
 .PHONY: build-linux-arm-v6
 build-linux-arm-v6:
-	$(MAKE) CC="arm-linux-gnueabi-gcc" PARAM_GOARM="6" PARAM_GOARCH="arm" build-linux
+	$(MAKE) PARAM_GOARM="6" PARAM_GOARCH="arm" build-linux
 
 # Build statically binary for linux arm64 (ARMv8)
 .PHONY: build-linux-arm64
