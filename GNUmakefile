@@ -52,7 +52,12 @@ build-linux: set-env-linux
 build-linux-amd64:
 	$(MAKE) build-linux
 
-# Build statically binary for linux arm64
+# Build statically binary for linux arm (ARMv6)
+.PHONY: build-linux-arm-v6
+build-linux-arm-v6:
+	$(MAKE) PARAM_GOARM="6" PARAM_GOARCH="arm" build-linux
+
+# Build statically binary for linux arm64 (ARMv8)
 .PHONY: build-linux-arm64
 build-linux-arm64:
 	$(MAKE) PARAM_GOARCH="arm64" build-linux

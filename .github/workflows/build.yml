@@ -30,8 +30,15 @@ jobs:
             verify_target: verify-binary-linux
             dependencies: musl-tools
           - os: linux
+            arch: arm-v6
+            # According to linter: warning Workflow => .github/workflows/build.yml:38:21: label "terraform-provider-bitwarden-sm-linux" is unknown.
+            runner: terraform-provider-bitwarden-sm-linux
+            build_target: build-linux-arm-v6
+            verify-target: verify-binary-linux
+            dependencies: musl-tools
+          - os: linux
             arch: arm64
-            # According to linter: warning Workflow => .github/workflows/build.yml:38:21: label "Terraform-provider-bitwarden-sm-linux" is unknown.
+            # According to linter: warning Workflow => .github/workflows/build.yml:38:21: label "terraform-provider-bitwarden-sm-linux" is unknown.
             runner: terraform-provider-bitwarden-sm-linux
             build_target: build-linux-arm64
             verify-target: verify-binary-linux
@@ -58,7 +65,6 @@ jobs:
             arch: arm64
 
     steps:
-
       - name: Check out repo
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
