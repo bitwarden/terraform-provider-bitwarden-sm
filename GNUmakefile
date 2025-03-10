@@ -13,7 +13,7 @@ BINARY_VERSION ?= ''
 PARAM_CC ?= musl-gcc
 PARAM_GOOS ?= linux
 PARAM_GOARCH ?= amd64
-PARAM_CGO_ENABLED ?= 0
+PARAM_CGO_ENABLED ?= 1
 PARAM_CGO_LDFLAGS ?= '-s -w -static -Wl,-unresolved-symbols=ignore-all'
 PARAM_VERIFY ?= 'statically linked'
 

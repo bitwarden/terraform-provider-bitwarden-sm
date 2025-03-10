@@ -19,6 +19,7 @@ jobs:
       module_name: ${{ steps.prepare-release.outputs.module_name }}
       version: ${{ steps.prepare-release.outputs.version }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ linux, darwin, windows ]
         arch: [ amd64, arm64 ]
