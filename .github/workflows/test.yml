@@ -22,7 +22,6 @@ jobs:
     permissions:
       contents: read
       id-token: write
-      actions: read
     strategy:
       max-parallel: 1
       fail-fast: false
