@@ -10,6 +10,9 @@ on:
     types: [ opened, synchronize ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
 
   build-artifact:
