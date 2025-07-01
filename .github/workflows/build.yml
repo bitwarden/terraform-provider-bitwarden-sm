@@ -10,6 +10,9 @@ on:
     types: [ opened, synchronize ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
 
   build-artifact:
@@ -31,8 +34,7 @@ jobs:
             dependencies: musl-tools
           - os: linux
             arch: arm64
-            # According to linter: warning Workflow => .github/workflows/build.yml:38:21: label "Terraform-provider-bitwarden-sm-linux" is unknown.
-            runner: Terraform-provider-bitwarden-sm-linux
+            runner: terraform-provider-bitwarden-sm-linux
             build_target: build-linux-arm64
             verify-target: verify-binary-linux
             dependencies: musl-tools
