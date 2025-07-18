@@ -52,7 +52,7 @@ jobs:
         uses: bitwarden/gh-actions/get-keyvault-secrets@main
         with:
           keyvault: gh-terraform-provider
-          secrets: "GPG-PRIVATE-KEY,GPG-PASSPHRASE"
+          secrets: "GPG-PRIVATE-KEY,GPG-PASSPHRASE,GPG-KEY-ID"
 
       - name: Log out from Azure
         uses: bitwarden/gh-actions/azure-logout@main
@@ -73,7 +73,7 @@ jobs:
 
       - name: Sign Checksum File
         run: |
-          gpg --detach-sign --local-user ${{ secrets.GPG_KEY_ID }} --output ${{ steps.checksum.outputs.checksum_file }}.sig ${{ steps.checksum.outputs.checksum_file }}
+          gpg --detach-sign --local-user ${{ steps.get-kv-secrets.outputs.GPG-KEY-ID }} --output ${{ steps.checksum.outputs.checksum_file }}.sig ${{ steps.checksum.outputs.checksum_file }}
 
       - name: Release
         uses: ncipollo/release-action@cdcc88a9acf3ca41c16c37bb7d21b9ad48560d87 # v1.15.0
