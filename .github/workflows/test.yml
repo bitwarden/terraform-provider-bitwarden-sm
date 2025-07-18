@@ -19,6 +19,9 @@ jobs:
     name: "${{ matrix.tool }} v${{ matrix.version }}: Provider Acceptance Tests"
     runs-on: ubuntu-22.04
     timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
     strategy:
       max-parallel: 1
       fail-fast: false
@@ -74,17 +77,34 @@ jobs:
       - name: Install build dependencies
         run: sudo apt update && sudo apt install musl-tools -y
 
+      - name: Log in to Azure
+        uses: bitwarden/gh-actions/azure-login@main
+        with:
+          subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+          client_id: ${{ secrets.AZURE_CLIENT_ID }}
+
+      - name: Get Azure Key Vault secrets
+        id: get-kv-secrets
+        uses: bitwarden/gh-actions/get-keyvault-secrets@main
+        with:
+          keyvault: gh-terraform-provider
+          secrets: "BW-API-URL,BW-IDENTITY-API-URL,BW-ORGANIZATION-ID-NO-ACCESS,BW-ACCESS-TOKEN,BW-ACCESS-TOKEN-NO-ACCESS"
+
+      - name: Log out from Azure
+        uses: bitwarden/gh-actions/azure-logout@main
+
       - name: Create bw client configuration file
         run: |
-          echo 'BW_API_URL="${{ secrets.BW_API_URL }}"' >> .env.local.test
-          echo 'BW_API_URL="${{ secrets.BW_API_URL }}"' >> .env.local.no.access
-          echo 'BW_IDENTITY_API_URL="${{ secrets.BW_IDENTITY_API_URL }}"' >> .env.local.test
-          echo 'BW_IDENTITY_API_URL="${{ secrets.BW_IDENTITY_API_URL }}"' >> .env.local.no.access
-          echo 'BW_ORGANIZATION_ID="${{ secrets.BW_ORGANIZATION_ID_NO_ACCESS }}"' >> .env.local.test
-          echo 'BW_ORGANIZATION_ID="${{ secrets.BW_ORGANIZATION_ID_NO_ACCESS }}"' >> .env.local.no.access
+          echo 'BW_API_URL="${{ steps.get-kv-secrets.outputs.BW-API-URL }}"' >> .env.local.test
+          echo 'BW_API_URL="${{ steps.get-kv-secrets.outputs.BW-API-URL }}"' >> .env.local.no.access
+          echo 'BW_IDENTITY_API_URL="${{ steps.get-kv-secrets.outputs.BW-IDENTITY-API-URL }}"' >> .env.local.test
+          echo 'BW_IDENTITY_API_URL="${{ steps.get-kv-secrets.outputs.BW-IDENTITY-API-URL }}"' >> .env.local.no.access
+          echo 'BW_ORGANIZATION_ID="${{ steps.get-kv-secrets.outputs.BW-ORGANIZATION-ID-NO-ACCESS }}"' >> .env.local.test
+          echo 'BW_ORGANIZATION_ID="${{ steps.get-kv-secrets.outputs.BW-ORGANIZATION-ID-NO-ACCESS }}"' >> .env.local.no.access
 
-          echo 'BW_ACCESS_TOKEN="${{ secrets.BW_ACCESS_TOKEN }}"' >> .env.local.test
-          echo 'BW_ACCESS_TOKEN="${{ secrets.BW_ACCESS_TOKEN_NO_ACCESS }}"' >> .env.local.no.access
+          echo 'BW_ACCESS_TOKEN="${{ steps.get-kv-secrets.outputs.BW-ACCESS-TOKEN }}"' >> .env.local.test
+          echo 'BW_ACCESS_TOKEN="${{ steps.get-kv-secrets.outputs.BW-ACCESS-TOKEN-NO-ACCESS }}"' >> .env.local.no.access
           echo 'BW_STATE_FILE=".bw-state-qa"' >> .env.local.test
           echo 'BW_STATE_FILE=".bw-state-qa-no-access"' >> .env.local.no.access
 
