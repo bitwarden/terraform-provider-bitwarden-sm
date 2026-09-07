@@ -3,10 +3,12 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/bitwarden/sdk-go/v2"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -28,7 +30,9 @@ type listSecretsDataSource struct {
 }
 
 type listSecretsDataSourceModel struct {
-	Secrets []listSecretDataSourceModel `tfsdk:"secrets"`
+	ProjectID types.String                `tfsdk:"project_id"`
+	Filter    types.String                `tfsdk:"filter"`
+	Secrets   []listSecretDataSourceModel `tfsdk:"secrets"`
 }
 
 type listSecretDataSourceModel struct {
@@ -42,9 +46,20 @@ func (l *listSecretsDataSource) Metadata(_ context.Context, req datasource.Metad
 
 func (l *listSecretsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description:         "The list_secrets data source fetches all secrets accessible by the used machine account.",
-		MarkdownDescription: "The `list_secrets` data source fetches all secrets accessible by the used machine account.",
+		Description:         "The list_secrets data source fetches all secrets accessible by the used machine account. Secrets can optionally be filtered by project ID or by key (name).",
+		MarkdownDescription: "The `list_secrets` data source fetches all secrets accessible by the used machine account. Secrets can optionally be filtered by `project_id` or by key (name) using `filter`.",
 		Attributes: map[string]schema.Attribute{
+			"project_id": schema.StringAttribute{
+				Description:         "Filter secrets by the project ID they belong to. Only secrets associated with this project will be returned.",
+				MarkdownDescription: "Filter secrets by the `project_id` they belong to. Only secrets associated with this project will be returned.",
+				Optional:            true,
+				Validators:          []validator.String{stringUUIDValidate()},
+			},
+			"filter": schema.StringAttribute{
+				Description:         "Filter secrets by key (name). Only secrets whose key contains this value (case-insensitive) will be returned.",
+				MarkdownDescription: "Filter secrets by `key` (name). Only secrets whose key contains this value (case-insensitive) will be returned.",
+				Optional:            true,
+			},
 			"secrets": schema.ListNestedAttribute{
 				Description: "Nested list of all fetched secrets",
 				Computed:    true,
@@ -111,10 +126,16 @@ func (l *listSecretsDataSource) Configure(ctx context.Context, req datasource.Co
 	tflog.Info(ctx, "Datasource Configured")
 }
 
-func (l *listSecretsDataSource) Read(ctx context.Context, _ datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (l *listSecretsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	tflog.Info(ctx, "Reading List Secrets Datasource")
 
-	var state listSecretsDataSourceModel
+	var config listSecretsDataSourceModel
+
+	diags := req.Config.Get(ctx, &config)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	if l.bitwardenClient == nil {
 		resp.Diagnostics.AddError(
@@ -133,16 +154,62 @@ func (l *listSecretsDataSource) Read(ctx context.Context, _ datasource.ReadReque
 		return
 	}
 
+	filterByProjectID := !config.ProjectID.IsNull() && !config.ProjectID.IsUnknown()
+	filterByKey := !config.Filter.IsNull() && !config.Filter.IsUnknown()
+
+	var state listSecretsDataSourceModel
+	state.ProjectID = config.ProjectID
+	state.Filter = config.Filter
+
+	// When filtering by project_id, we need to fetch full secret details
+	// because the list API only returns secret identifiers without project info.
+	if filterByProjectID && len(secrets.Data) > 0 {
+		projectIDFilter := config.ProjectID.ValueString()
+
+		var secretIDs []string
+		for _, secret := range secrets.Data {
+			secretIDs = append(secretIDs, secret.ID)
+		}
+
+		fullSecrets, err := l.bitwardenClient.Secrets().GetByIDS(secretIDs)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Unable to Fetch Secret Details",
+				err.Error(),
+			)
+			return
+		}
+
+		// Replace the list data with only the secrets matching the project filter.
+		secrets.Data = nil
+		for _, secret := range fullSecrets.Data {
+			if secret.ProjectID != nil && *secret.ProjectID == projectIDFilter {
+				secrets.Data = append(secrets.Data, sdk.SecretIdentifierResponse{
+					ID:             secret.ID,
+					Key:            secret.Key,
+					OrganizationID: secret.OrganizationID,
+				})
+			}
+		}
+	}
+
+	keyFilter := ""
+	if filterByKey {
+		keyFilter = strings.ToLower(config.Filter.ValueString())
+	}
+
 	for _, secret := range secrets.Data {
-		secretState := listSecretDataSourceModel{
+		if keyFilter != "" && !strings.Contains(strings.ToLower(secret.Key), keyFilter) {
+			continue
+		}
+		state.Secrets = append(state.Secrets, listSecretDataSourceModel{
 			ID:  types.StringValue(secret.ID),
 			Key: types.StringValue(secret.Key),
-		}
-		state.Secrets = append(state.Secrets, secretState)
+		})
 	}
 
 	// Set state
-	diags := resp.State.Set(ctx, &state)
+	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
